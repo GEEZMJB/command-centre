@@ -1,0 +1,140 @@
+{
+  "lastSync": "2026-03-10T20:45:08",
+  "checkpoints": [
+    {
+      "date": "Mar 12",
+      "name": "Carrd v2 copy live",
+      "project": "Grant Writing Freelance",
+      "color": "#c8a87a"
+    },
+    {
+      "date": "Mar 14",
+      "name": "Assessor page drafted",
+      "project": "Assessor Pool Applications",
+      "color": "#7ab8c8"
+    },
+    {
+      "date": "Mar 17",
+      "name": "MEAL role scan complete",
+      "project": "MEAL / Evaluation Roles",
+      "color": "#a8c87a"
+    }
+  ],
+  "agenda": [],
+  "workflows": [
+    {
+      "name": "Grant Writing Freelance (Track 0)",
+      "pct": 30,
+      "status": "active",
+      "next": "Paste v2 copy into Carrd site"
+    },
+    {
+      "name": "Assessor Pool Applications (Track 2)",
+      "pct": 0,
+      "status": "planned",
+      "next": "Draft assessor page copy"
+    },
+    {
+      "name": "MEAL / Evaluation Roles (Track 4)",
+      "pct": 0,
+      "status": "planned",
+      "next": "Complete MEAL role scan"
+    },
+    {
+      "name": "Dashboard Setup",
+      "pct": 60,
+      "status": "active",
+      "next": "GitHub Pages + Plash config"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Carrd site live with v2 copy (all sections)",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 2,
+      "title": "Assessor/evaluation Carrd page live with direct URL",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 3,
+      "title": "Professional indemnity insurance purchased and badge displayed",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 4,
+      "title": "Charity Excellence Funding Finder application submitted",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 5,
+      "title": "LinkedIn profile updated with cross-track positioning",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 6,
+      "title": "Blume registration submitted",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 7,
+      "title": "Assessor pool prospect list in Obsidian, first applications submitted",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 8,
+      "title": "Grant writing prospect pipeline in Obsidian, first outreach wave sent",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 9,
+      "title": "MEAL role scan in Obsidian, first applications submitted",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 10,
+      "title": "Outreach templates saved in Obsidian",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    },
+    {
+      "id": 11,
+      "title": "GEEZ recurring tasks set up: MEAL scan (fortnightly), prospect pipeline refresh ",
+      "project": "Sprint Plan",
+      "due": "\u2014",
+      "priority": "med",
+      "done": false
+    }
+  ]
+}

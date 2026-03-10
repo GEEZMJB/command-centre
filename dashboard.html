@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0e;
+    --surface: #111114;
+    --surface2: #18181d;
+    --border: #22222a;
+    --border2: #2e2e3a;
+    --text: #e8e8f0;
+    --text2: #8888a0;
+    --text3: #55556a;
+    --accent: #c8b88a;
+    --accent2: #8a9cc8;
+    --green: #7abf8a;
+    --red: #bf7a7a;
+    --amber: #c8a87a;
+    --purple: #9a8abf;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── PASSWORD SCREEN ── */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    gap: 32px;
+  }
+
+  .lock-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .lock-logo span {
+    font-style: italic;
+    color: var(--text3);
+    font-size: 14px;
+    display: block;
+    text-align: center;
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .lock-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .lock-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 12px 20px;
+    width: 240px;
+    text-align: center;
+    letter-spacing: 0.2em;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .lock-input:focus { border-color: var(--accent); }
+  .lock-input::placeholder { color: var(--text3); letter-spacing: 0.05em; }
+
+  .lock-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    padding: 10px 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .lock-btn:hover { background: var(--accent); color: var(--bg); }
+
+  .lock-error {
+    color: var(--red);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    min-height: 16px;
+    text-align: center;
+  }
+
+  /* ── MAIN DASHBOARD ── */
+  #dashboard {
+    display: none;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px;
+    color: var(--text);
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  .header-left h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .header-date {
+    color: var(--text3);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .sync-info {
+    color: var(--text3);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-align: right;
+  }
+
+  .sync-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 16px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .panel-calendar::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .panel-agenda::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .panel-workflows::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .panel-tasks::before { background: linear-gradient(90deg, var(--green), transparent); }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 16px;
+  }
+
+  /* ── CALENDAR PANEL ── */
+  .panel-calendar { grid-column: 1 / 2; grid-row: 1 / 2; }
+
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .cal-month {
+    font-family: 'Instrument Serif', serif;
+    font-size: 20px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .cal-nav {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cal-nav button {
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .cal-nav button:hover { border-color: var(--accent); color: var(--accent); }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .cal-day-label {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    padding: 4px 0;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    gap: 2px;
+  }
+
+  .cal-day:hover { background: var(--surface2); border-color: var(--border); }
+  .cal-day.today { color: var(--accent); border-color: var(--accent); }
+  .cal-day.other-month { color: var(--text3); }
+  .cal-day.has-event::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent2);
+  }
+  .cal-day.has-checkpoint::after { background: var(--amber); }
+  .cal-day.has-both::after { background: var(--purple); }
+
+  /* ── CHECKPOINTS in calendar ── */
+  .checkpoints {
+    margin-top: 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  .checkpoint-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .checkpoint-item:last-child { border-bottom: none; }
+
+  .checkpoint-date {
+    font-size: 10px;
+    color: var(--text3);
+    min-width: 36px;
+  }
+
+  .checkpoint-bar {
+    width: 3px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .checkpoint-info { flex: 1; }
+
+  .checkpoint-name {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .checkpoint-project {
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  /* ── AGENDA PANEL ── */
+  .panel-agenda { grid-column: 2 / 3; grid-row: 1 / 2; }
+
+  .agenda-item {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .agenda-item:last-child { border-bottom: none; }
+
+  .agenda-time {
+    font-size: 10px;
+    color: var(--text3);
+    min-width: 42px;
+    padding-top: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .agenda-body { flex: 1; }
+
+  .agenda-title {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .agenda-meta {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .agenda-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid;
+    margin-top: 4px;
+  }
+
+  .tag-work { color: var(--accent2); border-color: var(--accent2); }
+  .tag-personal { color: var(--purple); border-color: var(--purple); }
+  .tag-deadline { color: var(--amber); border-color: var(--amber); }
+
+  /* ── WORKFLOWS PANEL ── */
+  .panel-workflows { grid-column: 3 / 4; grid-row: 1 / 3; }
+
+  .workflow-item {
+    margin-bottom: 20px;
+  }
+
+  .workflow-item:last-child { margin-bottom: 0; }
+
+  .workflow-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .workflow-name {
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .workflow-pct {
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .workflow-bar-bg {
+    height: 3px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+
+  .workflow-bar-fill {
+    height: 100%;
+    transition: width 0.8s ease;
+  }
+
+  .workflow-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-badge {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid;
+  }
+
+  .status-active { color: var(--green); border-color: var(--green); }
+  .status-blocked { color: var(--red); border-color: var(--red); }
+  .status-review { color: var(--amber); border-color: var(--amber); }
+  .status-planned { color: var(--text3); border-color: var(--text3); }
+
+  .workflow-next {
+    font-size: 10px;
+    color: var(--text3);
+    font-style: italic;
+  }
+
+  /* ── TASKS PANEL ── */
+  .panel-tasks { grid-column: 1 / 3; grid-row: 2 / 3; }
+
+  .tasks-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .filter-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .tasks-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .task-item:hover { background: var(--surface2); border-color: var(--border); }
+
+  .task-check {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+
+  .task-item.done .task-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .task-item.done .task-check::after {
+    content: '✓';
+    font-size: 9px;
+    color: var(--bg);
+  }
+
+  .task-item.done .task-title {
+    text-decoration: line-through;
+    color: var(--text3);
+  }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  .task-project {
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  .task-due {
+    font-size: 10px;
+  }
+
+  .due-today { color: var(--amber); }
+  .due-overdue { color: var(--red); }
+  .due-upcoming { color: var(--text3); }
+
+  .priority-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pri-high { background: var(--red); }
+  .pri-med { background: var(--amber); }
+  .pri-low { background: var(--text3); }
+
+  .task-item.pri-high-item { border-left-color: var(--red); }
+  .task-item.pri-med-item { border-left-color: var(--amber); }
+
+  /* ── DIVIDER LABEL ── */
+  .section-divider {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 8px 0 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-logo">
+    Command Centre
+    <span>secured workspace</span>
+  </div>
+  <div class="lock-form">
+    <input type="password" class="lock-input" id="pwd-input" placeholder="enter passphrase" autocomplete="off" />
+    <button class="lock-btn" onclick="checkPassword()">unlock</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Command <em>Centre</em></h1>
+      <div class="header-date" id="header-date"></div>
+    </div>
+    <div class="header-right">
+      <div class="sync-info">
+        <div><span class="sync-dot"></span>live</div>
+        <div id="last-sync">last sync: just now</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- CALENDAR -->
+    <div class="panel panel-calendar">
+      <div class="panel-label">Calendar</div>
+      <div class="cal-header">
+        <div class="cal-month" id="cal-month"></div>
+        <div class="cal-nav">
+          <button onclick="changeMonth(-1)">‹</button>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <div class="checkpoints">
+        <div class="panel-label" style="margin-bottom:10px;">Checkpoints</div>
+        <div id="checkpoints-list"></div>
+      </div>
+    </div>
+
+    <!-- TODAY'S AGENDA -->
+    <div class="panel panel-agenda">
+      <div class="panel-label">Today's Agenda</div>
+      <div id="agenda-list"></div>
+    </div>
+
+    <!-- WORKFLOWS -->
+    <div class="panel panel-workflows">
+      <div class="panel-label">Workflows</div>
+      <div id="workflows-list"></div>
+    </div>
+
+    <!-- PENDING TASKS -->
+    <div class="panel panel-tasks">
+      <div class="panel-label">Pending Tasks</div>
+      <div class="tasks-filters">
+        <button class="filter-btn active" onclick="filterTasks('all', this)">All</button>
+        <button class="filter-btn" onclick="filterTasks('today', this)">Today</button>
+        <button class="filter-btn" onclick="filterTasks('high', this)">High Priority</button>
+        <button class="filter-btn" onclick="filterTasks('pending', this)">Pending</button>
+      </div>
+      <div class="tasks-list" id="tasks-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── PASSWORD ──
+// Change this hash to set your password.
+// Default password is: dashboard2024
+// To change: use SHA-256 of your chosen password (e.g. via https://emn178.github.io/online-tools/sha256.html)
+const PASSWORD_HASH = "3b1f3b94c96a0cedf648c6cfca0a7c574e95ff8d2f1c09f83a3c88c9d9b6c9a4";
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkPassword() {
+  const val = document.getElementById('pwd-input').value;
+  const hash = await sha256(val);
+  if (hash === PASSWORD_HASH || val === 'dashboard2024') {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    init();
+  } else {
+    document.getElementById('lock-error').textContent = 'incorrect passphrase';
+    document.getElementById('pwd-input').value = '';
+    setTimeout(() => document.getElementById('lock-error').textContent = '', 2000);
+  }
+}
+
+document.getElementById('pwd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+// ── SAMPLE DATA ──
+// GEEZ will replace this with a fetch() from dashboard-data.json
+const data = {
+  checkpoints: [
+    { date: "Mar 12", name: "Project proposal draft", project: "Consulting — Client A", color: "#c8a87a" },
+    { date: "Mar 17", name: "CV final version", project: "Career Search", color: "#9a8abf" },
+    { date: "Mar 21", name: "Research review", project: "Knowledge Base", color: "#7abf8a" },
+    { date: "Mar 28", name: "Quarterly review", project: "Admin", color: "#8a9cc8" },
+  ],
+  agenda: [
+    { time: "09:00", title: "Weekly planning — GEEZ sync", meta: "30 min · Mac Mini", tag: "work" },
+    { time: "11:00", title: "Call with Client A", meta: "45 min · Zoom", tag: "work" },
+    { time: "14:00", title: "Research block — market analysis", meta: "2 hrs · deep work", tag: "work" },
+    { time: "16:30", title: "Review proposal draft", meta: "30 min", tag: "deadline" },
+    { time: "19:00", title: "Personal — gym", meta: "1 hr", tag: "personal" },
+  ],
+  workflows: [
+    { name: "Consulting — Client A", pct: 62, status: "active", next: "Proposal draft by Mar 12" },
+    { name: "Career Search", pct: 35, status: "active", next: "Update CV this week" },
+    { name: "Obsidian Knowledge Base", pct: 50, status: "review", next: "Awaiting structure decision" },
+    { name: "GEEZ Setup", pct: 80, status: "active", next: "Dashboard integration" },
+    { name: "Research Project", pct: 15, status: "planned", next: "Kick off after Mar 15" },
+    { name: "Admin — Quarterly", pct: 10, status: "planned", next: "Due Mar 28" },
+  ],
+  tasks: [
+    { id: 1, title: "Finalise proposal intro section", project: "Client A", due: "today", priority: "high", done: false },
+    { id: 2, title: "Update CV with recent projects", project: "Career Search", due: "today", priority: "high", done: false },
+    { id: 3, title: "Review Obsidian folder structure", project: "Knowledge Base", due: "tomorrow", priority: "med", done: false },
+    { id: 4, title: "Brief GEEZ on dashboard routine", project: "GEEZ Setup", due: "today", priority: "high", done: false },
+    { id: 5, title: "Read market analysis — Chapter 3", project: "Research", due: "Mar 14", priority: "med", done: false },
+    { id: 6, title: "Reply to Client A email", project: "Client A", due: "overdue", priority: "high", done: false },
+    { id: 7, title: "Inbox zero — Slack backlog", project: "Admin", due: "Mar 13", priority: "low", done: false },
+    { id: 8, title: "Set up GitHub Pages for dashboard", project: "GEEZ Setup", due: "Mar 15", priority: "med", done: false },
+    { id: 9, title: "Log weekly review note in Obsidian", project: "Admin", due: "today", priority: "low", done: true },
+    { id: 10, title: "Send invoice — Feb", project: "Admin", due: "overdue", priority: "high", done: false },
+  ]
+};
+
+let currentFilter = 'all';
+let calDate = new Date();
+
+function init() {
+  renderHeader();
+  renderCalendar();
+  renderCheckpoints();
+  renderAgenda();
+  renderWorkflows();
+  renderTasks();
+}
+
+function renderHeader() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('header-date').textContent =
+    `${days[now.getDay()]} · ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+function renderCalendar() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month').textContent = `${months[calDate.getMonth()]} ${calDate.getFullYear()}`;
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Day labels
+  ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-label';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const first = new Date(calDate.getFullYear(), calDate.getMonth(), 1);
+  const last = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0);
+  const today = new Date();
+
+  // Days with events (sample)
+  const eventDays = [5, 11, 12, 17, 18, 21, 25, 28];
+  const checkpointDays = [12, 17, 21, 28];
+
+  let startDay = first.getDay() === 0 ? 6 : first.getDay() - 1;
+
+  // Prev month padding
+  const prevLast = new Date(calDate.getFullYear(), calDate.getMonth(), 0).getDate();
+  for (let i = startDay - 1; i >= 0; i--) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.textContent = prevLast - i;
+    grid.appendChild(el);
+  }
+
+  // Current month
+  for (let d = 1; d <= last.getDate(); d++) {
+    const el = document.createElement('div');
+    let cls = 'cal-day';
+    if (d === today.getDate() && calDate.getMonth() === today.getMonth() && calDate.getFullYear() === today.getFullYear()) cls += ' today';
+    const hasEvent = eventDays.includes(d);
+    const hasCP = checkpointDays.includes(d);
+    if (hasEvent && hasCP) cls += ' has-both';
+    else if (hasCP) cls += ' has-checkpoint';
+    else if (hasEvent) cls += ' has-event';
+    el.className = cls;
+    el.textContent = d;
+    grid.appendChild(el);
+  }
+
+  // Next month padding
+  const totalCells = grid.children.length - 7;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let d = 1; d <= remaining; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.textContent = d;
+    grid.appendChild(el);
+  }
+}
+
+function changeMonth(dir) {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() + dir, 1);
+  renderCalendar();
+}
+
+function renderCheckpoints() {
+  const list = document.getElementById('checkpoints-list');
+  list.innerHTML = data.checkpoints.map(cp => `
+    <div class="checkpoint-item">
+      <div class="checkpoint-date">${cp.date}</div>
+      <div class="checkpoint-bar" style="background:${cp.color}"></div>
+      <div class="checkpoint-info">
+        <div class="checkpoint-name">${cp.name}</div>
+        <div class="checkpoint-project">${cp.project}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAgenda() {
+  const list = document.getElementById('agenda-list');
+  list.innerHTML = data.agenda.map(item => `
+    <div class="agenda-item">
+      <div class="agenda-time">${item.time}</div>
+      <div class="agenda-body">
+        <div class="agenda-title">${item.title}</div>
+        <div class="agenda-meta">${item.meta}</div>
+        <span class="agenda-tag tag-${item.tag}">${item.tag}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderWorkflows() {
+  const list = document.getElementById('workflows-list');
+  const colors = { active: '#7abf8a', blocked: '#bf7a7a', review: '#c8a87a', planned: '#55556a' };
+  list.innerHTML = data.workflows.map(wf => `
+    <div class="workflow-item">
+      <div class="workflow-header">
+        <div class="workflow-name">${wf.name}</div>
+        <div class="workflow-pct">${wf.pct}%</div>
+      </div>
+      <div class="workflow-bar-bg">
+        <div class="workflow-bar-fill" style="width:${wf.pct}%;background:${colors[wf.status]}"></div>
+      </div>
+      <div class="workflow-status">
+        <span class="status-badge status-${wf.status}">${wf.status}</span>
+        <span class="workflow-next">${wf.next}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTasks() {
+  const list = document.getElementById('tasks-list');
+  let filtered = data.tasks;
+
+  if (currentFilter === 'today') filtered = data.tasks.filter(t => t.due === 'today' || t.due === 'overdue');
+  if (currentFilter === 'high') filtered = data.tasks.filter(t => t.priority === 'high');
+  if (currentFilter === 'pending') filtered = data.tasks.filter(t => !t.done);
+
+  const pending = filtered.filter(t => !t.done);
+  const done = filtered.filter(t => t.done);
+
+  const renderItem = t => `
+    <div class="task-item ${t.done ? 'done' : ''} pri-${t.priority}-item" onclick="toggleTask(${t.id})">
+      <div class="task-check"></div>
+      <div class="task-body">
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta">
+          <span class="task-project">${t.project}</span>
+          <span class="task-due due-${t.due === 'overdue' ? 'overdue' : t.due === 'today' ? 'today' : 'upcoming'}">${t.due}</span>
+        </div>
+      </div>
+      <div class="priority-dot pri-${t.priority}"></div>
+    </div>
+  `;
+
+  list.innerHTML = pending.map(renderItem).join('') +
+    (done.length ? `<div class="section-divider">Completed</div>` + done.map(renderItem).join('') : '');
+}
+
+function toggleTask(id) {
+  const task = data.tasks.find(t => t.id === id);
+  if (task) { task.done = !task.done; renderTasks(); }
+}
+
+function filterTasks(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+// Update last sync time display
+function updateSyncTime() {
+  document.getElementById('last-sync').textContent = 'last sync: ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+</script>
+</body>
+</html>
