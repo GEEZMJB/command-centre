@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-10T21:57:57",
+  "lastSync": "2026-03-10T22:03:46",
   "checkpoints": [
     {
       "date": "Mar 12",
@@ -21,7 +21,38 @@
     }
   ],
   "agenda": [],
-  "workflows": [],
+  "workflows": [
+    {
+      "name": "Grant Writing Freelance (Track 0)",
+      "pct": 65,
+      "status": "active",
+      "next": "Draft cold outreach template for grant writing clients (Checkpoint 3.4)"
+    },
+    {
+      "name": "Assessor Pool Applications (Track 2)",
+      "pct": 45,
+      "status": "active",
+      "next": "Submit EOI to Ufi VocTech Trust, City Bridge Foundation, and Rosa Fund"
+    },
+    {
+      "name": "MEAL / Evaluation Roles (Track 4)",
+      "pct": 35,
+      "status": "active",
+      "next": "Decide on High Trees MEL Lead application (deadline 15 March)"
+    },
+    {
+      "name": "Skate Haven Admin (CIC Operations)",
+      "pct": 40,
+      "status": "active",
+      "next": "Run co-directors meeting; finalise mentoring safeguarding protocol, Easter camp publish, and space strategy direction"
+    },
+    {
+      "name": "Dashboard Config",
+      "pct": 60,
+      "status": "active",
+      "next": "GitHub Pages + Plash config"
+    }
+  ],
   "tasks": [
     {
       "id": 1,
