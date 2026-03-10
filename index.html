@@ -582,7 +582,99 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: var(--surface); }
   ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  /* ── EVENT OVERLAY ── */
+  #event-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(12,12,14,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  #event-overlay.open { display: flex; }
+  .overlay-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .overlay-title {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 2px;
+  }
+  .overlay-date-label {
+    font-size: 15px;
+    color: var(--accent);
+    font-family: 'Instrument Serif', serif;
+  }
+  .overlay-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .overlay-input:focus { border-color: var(--accent); }
+  .overlay-row { display: flex; gap: 10px; }
+  .overlay-row .overlay-input { flex: 1; }
+  .overlay-select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+  }
+  .overlay-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .overlay-btn {
+    flex: 1;
+    padding: 9px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .overlay-btn.primary { background: var(--accent); color: #0c0c0e; border-color: var(--accent); }
+  .overlay-btn.primary:hover { background: #d4c49a; }
+  .overlay-btn.cancel { background: transparent; color: var(--text2); }
+  .overlay-btn.cancel:hover { background: var(--surface2); }
+  .overlay-status { font-size: 11px; color: var(--text2); text-align: center; min-height: 14px; }
+  .overlay-status.ok { color: var(--green); }
+  .overlay-status.err { color: var(--red); }
+  /* GCal auth badge */
+  #gcal-badge {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: right;
+    padding: 4px 0 0;
+  }
+  #gcal-badge.authed { color: var(--green); }
+  /* calendar day hover */
+  .cal-day:not(.other-month) { cursor: pointer; }
+  .cal-day:not(.other-month):hover { background: var(--surface2); border-radius: 4px; }
+
 </style>
+  <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
 
@@ -710,6 +802,7 @@ let calDate = new Date();
 
 async function init() {
   await loadDashboardData();
+  initGcalAuth();
   renderHeader();
   renderCalendar();
   renderCheckpoints();
@@ -772,6 +865,23 @@ function renderCalendar() {
     else if (hasEvent) cls += ' has-event';
     el.className = cls;
     el.textContent = d;
+    // Build date string for this cell
+    const cellDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
+    el.onclick = () => openOverlay(cellDate);
+    // Dot for live agenda events
+    const agendaDay = (data.agenda || []).filter(ev => {
+      if (!ev._date) return false;
+      const ed = new Date(ev._date);
+      return ed.getFullYear() === cellDate.getFullYear() &&
+             ed.getMonth()    === cellDate.getMonth() &&
+             ed.getDate()     === cellDate.getDate();
+    });
+    if (agendaDay.length) {
+      const dot = document.createElement('span');
+      dot.style.cssText = 'position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent2);display:block;';
+      el.style.position = 'relative';
+      el.appendChild(dot);
+    }
     grid.appendChild(el);
   }
 
@@ -880,10 +990,161 @@ function filterTasks(filter, btn) {
   renderTasks();
 }
 
+
+// ── GOOGLE CALENDAR INTEGRATION ──────────────────────────────────────────────
+// Replace YOUR_CLIENT_ID with your Google Cloud OAuth 2.0 Web Client ID
+const GCAL_CLIENT_ID = 'YOUR_CLIENT_ID';
+const GCAL_SCOPES    = 'https://www.googleapis.com/auth/calendar.events';
+const GCAL_CALENDAR  = 'migisjobbot@gmail.com';
+
+let gcalToken = null;
+
+function initGcalAuth() {
+  if (!GCAL_CLIENT_ID || GCAL_CLIENT_ID === 'YOUR_CLIENT_ID') return;
+  try {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GCAL_CLIENT_ID,
+      scope: GCAL_SCOPES,
+      callback: (resp) => {
+        if (resp.access_token) {
+          gcalToken = resp.access_token;
+          document.getElementById('gcal-badge').textContent = '● connected to GCal';
+          document.getElementById('gcal-badge').classList.add('authed');
+        }
+      }
+    });
+    // Request token silently on load (uses cached consent if available)
+    client.requestAccessToken({ prompt: '' });
+    window._gcalClient = client;
+  } catch(e) { /* GIS not loaded yet */ }
+}
+
+let overlayDate = null;
+
+function openOverlay(date) {
+  overlayDate = date;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('overlay-date-label').textContent =
+    `${days[date.getDay()]} · ${date.getDate()} ${months[date.getMonth()]}`;
+  document.getElementById('ev-title').value  = '';
+  document.getElementById('ev-start').value  = '09:00';
+  document.getElementById('ev-end').value    = '10:00';
+  document.getElementById('ev-tag').value    = 'work';
+  document.getElementById('overlay-status').textContent = '';
+  document.getElementById('overlay-status').className   = 'overlay-status';
+  document.getElementById('event-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('ev-title').focus(), 50);
+  // Request GCal token if not yet authed
+  if (!gcalToken && window._gcalClient) {
+    window._gcalClient.requestAccessToken({ prompt: '' });
+  }
+}
+
+function closeOverlay() {
+  document.getElementById('event-overlay').classList.remove('open');
+}
+
+// Close on backdrop click
+document.getElementById('event-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('event-overlay')) closeOverlay();
+});
+
+async function saveEvent() {
+  const title    = document.getElementById('ev-title').value.trim();
+  const startStr = document.getElementById('ev-start').value;
+  const endStr   = document.getElementById('ev-end').value;
+  const tag      = document.getElementById('ev-tag').value;
+  const status   = document.getElementById('overlay-status');
+
+  if (!title) { status.textContent = 'add a title first'; status.className = 'overlay-status err'; return; }
+  if (!gcalToken) {
+    status.textContent = 'connecting to GCal…';
+    status.className   = 'overlay-status';
+    if (window._gcalClient) window._gcalClient.requestAccessToken({ prompt: 'consent' });
+    return;
+  }
+
+  const yr  = overlayDate.getFullYear();
+  const mo  = String(overlayDate.getMonth() + 1).padStart(2, '0');
+  const day = String(overlayDate.getDate()).padStart(2, '0');
+
+  const event = {
+    summary: title,
+    start:   { dateTime: `${yr}-${mo}-${day}T${startStr}:00`, timeZone: 'Europe/London' },
+    end:     { dateTime: `${yr}-${mo}-${day}T${endStr}:00`,   timeZone: 'Europe/London' },
+    colorId: tag === 'deadline' ? '11' : tag === 'personal' ? '7' : '1'
+  };
+
+  status.textContent = 'saving…';
+  status.className   = 'overlay-status';
+
+  try {
+    const resp = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GCAL_CALENDAR)}/events`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${gcalToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(event)
+      }
+    );
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const created = await resp.json();
+
+    status.textContent = '✓ saved to Google Calendar';
+    status.className   = 'overlay-status ok';
+
+    // Add to local agenda immediately for visual feedback
+    if (!data.agenda) data.agenda = [];
+    data.agenda.push({
+      time:  startStr,
+      title: title,
+      meta:  '',
+      tag:   tag,
+      _date: `${yr}-${mo}-${day}`
+    });
+    renderAgenda();
+    renderCalendar();
+
+    setTimeout(closeOverlay, 1200);
+  } catch(e) {
+    status.textContent = 'failed: ' + e.message;
+    status.className   = 'overlay-status err';
+    if (e.message.includes('401')) { gcalToken = null; }
+  }
+}
+
 // Update last sync time display
 function updateSyncTime() {
   document.getElementById('last-sync').textContent = 'last sync: ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 }
 </script>
+
+<!-- ── EVENT CREATE OVERLAY ── -->
+<div id="event-overlay">
+  <div class="overlay-box">
+    <div>
+      <div class="overlay-title">New Event</div>
+      <div class="overlay-date-label" id="overlay-date-label"></div>
+    </div>
+    <input class="overlay-input" id="ev-title" type="text" placeholder="Event title" autocomplete="off" />
+    <div class="overlay-row">
+      <input class="overlay-input" id="ev-start" type="time" value="09:00" />
+      <input class="overlay-input" id="ev-end"   type="time" value="10:00" />
+    </div>
+    <select class="overlay-select" id="ev-tag">
+      <option value="work">work</option>
+      <option value="personal">personal</option>
+      <option value="deadline">deadline</option>
+    </select>
+    <div class="overlay-status" id="overlay-status"></div>
+    <div class="overlay-actions">
+      <button class="overlay-btn cancel" onclick="closeOverlay()">cancel</button>
+      <button class="overlay-btn primary" onclick="saveEvent()">save to GCal</button>
+    </div>
+    <div id="gcal-badge">● not connected to GCal</div>
+  </div>
+</div>
+
 </body>
 </html>
