@@ -692,48 +692,24 @@ document.getElementById('pwd-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') checkPassword();
 });
 
-// ── SAMPLE DATA ──
-// GEEZ will replace this with a fetch() from dashboard-data.json
-const data = {
-  checkpoints: [
-    { date: "Mar 12", name: "Project proposal draft", project: "Consulting — Client A", color: "#c8a87a" },
-    { date: "Mar 17", name: "CV final version", project: "Career Search", color: "#9a8abf" },
-    { date: "Mar 21", name: "Research review", project: "Knowledge Base", color: "#7abf8a" },
-    { date: "Mar 28", name: "Quarterly review", project: "Admin", color: "#8a9cc8" },
-  ],
-  agenda: [
-    { time: "09:00", title: "Weekly planning — GEEZ sync", meta: "30 min · Mac Mini", tag: "work" },
-    { time: "11:00", title: "Call with Client A", meta: "45 min · Zoom", tag: "work" },
-    { time: "14:00", title: "Research block — market analysis", meta: "2 hrs · deep work", tag: "work" },
-    { time: "16:30", title: "Review proposal draft", meta: "30 min", tag: "deadline" },
-    { time: "19:00", title: "Personal — gym", meta: "1 hr", tag: "personal" },
-  ],
-  workflows: [
-    { name: "Consulting — Client A", pct: 62, status: "active", next: "Proposal draft by Mar 12" },
-    { name: "Career Search", pct: 35, status: "active", next: "Update CV this week" },
-    { name: "Obsidian Knowledge Base", pct: 50, status: "review", next: "Awaiting structure decision" },
-    { name: "GEEZ Setup", pct: 80, status: "active", next: "Dashboard integration" },
-    { name: "Research Project", pct: 15, status: "planned", next: "Kick off after Mar 15" },
-    { name: "Admin — Quarterly", pct: 10, status: "planned", next: "Due Mar 28" },
-  ],
-  tasks: [
-    { id: 1, title: "Finalise proposal intro section", project: "Client A", due: "today", priority: "high", done: false },
-    { id: 2, title: "Update CV with recent projects", project: "Career Search", due: "today", priority: "high", done: false },
-    { id: 3, title: "Review Obsidian folder structure", project: "Knowledge Base", due: "tomorrow", priority: "med", done: false },
-    { id: 4, title: "Brief GEEZ on dashboard routine", project: "GEEZ Setup", due: "today", priority: "high", done: false },
-    { id: 5, title: "Read market analysis — Chapter 3", project: "Research", due: "Mar 14", priority: "med", done: false },
-    { id: 6, title: "Reply to Client A email", project: "Client A", due: "overdue", priority: "high", done: false },
-    { id: 7, title: "Inbox zero — Slack backlog", project: "Admin", due: "Mar 13", priority: "low", done: false },
-    { id: 8, title: "Set up GitHub Pages for dashboard", project: "GEEZ Setup", due: "Mar 15", priority: "med", done: false },
-    { id: 9, title: "Log weekly review note in Obsidian", project: "Admin", due: "today", priority: "low", done: true },
-    { id: 10, title: "Send invoice — Feb", project: "Admin", due: "overdue", priority: "high", done: false },
-  ]
-};
+// ── LIVE DATA ──
+let data = { checkpoints: [], agenda: [], workflows: [], tasks: [] };
+
+async function loadDashboardData() {
+  try {
+    const resp = await fetch('dashboard-data.json?t=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    data = await resp.json();
+  } catch (e) {
+    console.warn('dashboard-data.json not loaded:', e);
+  }
+}
 
 let currentFilter = 'all';
 let calDate = new Date();
 
-function init() {
+async function init() {
+  await loadDashboardData();
   renderHeader();
   renderCalendar();
   renderCheckpoints();
