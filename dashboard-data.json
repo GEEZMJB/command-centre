@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-10T21:19:38",
+  "lastSync": "2026-03-10T21:57:57",
   "checkpoints": [
     {
       "date": "Mar 12",
@@ -21,32 +21,7 @@
     }
   ],
   "agenda": [],
-  "workflows": [
-    {
-      "name": "Grant Writing Freelance (Track 0)",
-      "pct": 30,
-      "status": "active",
-      "next": "Paste v2 copy into Carrd site"
-    },
-    {
-      "name": "Assessor Pool Applications (Track 2)",
-      "pct": 0,
-      "status": "planned",
-      "next": "Draft assessor page copy"
-    },
-    {
-      "name": "MEAL / Evaluation Roles (Track 4)",
-      "pct": 0,
-      "status": "planned",
-      "next": "Complete MEAL role scan"
-    },
-    {
-      "name": "Dashboard Setup",
-      "pct": 60,
-      "status": "active",
-      "next": "GitHub Pages + Plash config"
-    }
-  ],
+  "workflows": [],
   "tasks": [
     {
       "id": 1,
