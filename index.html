@@ -667,7 +667,7 @@
 // Change this hash to set your password.
 // Default password is: dashboard2024
 // To change: use SHA-256 of your chosen password (e.g. via https://emn178.github.io/online-tools/sha256.html)
-const PASSWORD_HASH = "3b1f3b94c96a0cedf648c6cfca0a7c574e95ff8d2f1c09f83a3c88c9d9b6c9a4";
+const PASSWORD_HASH = "1210ecc50496223fcff1b908380ea98c3cce9d428f7ce8d65f9f46cf66733876";
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
@@ -677,7 +677,7 @@ async function sha256(str) {
 async function checkPassword() {
   const val = document.getElementById('pwd-input').value;
   const hash = await sha256(val);
-  if (hash === PASSWORD_HASH || val === 'dashboard2024') {
+  if (hash === PASSWORD_HASH) {
     document.getElementById('lock-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     init();
