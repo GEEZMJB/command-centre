@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-11T20:47:27",
+  "lastSync": "2026-03-11T20:48:09",
   "checkpoints": [
     {
       "date": "Mar 12",
@@ -20,7 +20,64 @@
       "color": "#a8c87a"
     }
   ],
-  "agenda": [],
+  "agenda": [
+    {
+      "time": "00:00",
+      "_date": "2026-03-15T00:00:00",
+      "title": "Mother\u2019s Day",
+      "meta": "23h 59m",
+      "tag": "work",
+      "calendar": "UK Holidays"
+    },
+    {
+      "time": "09:00",
+      "_date": "2026-03-18T09:00:00",
+      "title": "Test",
+      "meta": "1h",
+      "tag": "work",
+      "calendar": "migisjobbot@gmail.com"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-03-20T00:00:00",
+      "title": "CW follow-up",
+      "meta": "23h 59m",
+      "tag": "personal",
+      "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "09:30",
+      "_date": "2026-03-24T09:30:00",
+      "title": "Sport england check-in (ucl email)",
+      "meta": "1h",
+      "tag": "personal",
+      "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-04-03T00:00:00",
+      "title": "Good Friday",
+      "meta": "23h 59m",
+      "tag": "work",
+      "calendar": "UK Holidays"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-04-05T00:00:00",
+      "title": "Easter Sunday",
+      "meta": "23h 59m",
+      "tag": "work",
+      "calendar": "UK Holidays"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-04-06T00:00:00",
+      "title": "Easter Monday",
+      "meta": "23h 59m",
+      "tag": "work",
+      "calendar": "UK Holidays"
+    }
+  ],
   "workflows": [
     {
       "name": "Grant Writing Freelance (Track 0)",
