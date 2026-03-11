@@ -298,13 +298,23 @@
     border-radius: 50%;
     background: var(--accent2);
   }
-  /* checkpoint top-bar replaces the old ::after dot */
-  .cal-checkpoint-bar {
+  /* checkpoint dot cluster — centred at top of date cell */
+  .cal-cp-dots {
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    border-radius: 2px 2px 0 0;
+    top: 3px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
     pointer-events: none;
+  }
+  .cal-cp-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
   }
 
   /* ── CHECKPOINTS in calendar ── */
@@ -942,16 +952,19 @@ function renderCalendar() {
     // Build date string for this cell
     const cellDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
     el.onclick = () => openOverlay(cellDate);
-    // Checkpoint top-bar(s)
+    // Checkpoint dot cluster — one coloured dot per checkpoint, centred at top
     if (cpMap[d]) {
       el.style.position = 'relative';
+      const cluster = document.createElement('div');
+      cluster.className = 'cal-cp-dots';
       cpMap[d].forEach(cp => {
-        const bar = document.createElement('div');
-        bar.className = 'cal-checkpoint-bar';
-        bar.style.background = cp.groupColor;
-        bar.title = `${cp.name} · ${cp.project}`;
-        el.appendChild(bar);
+        const dot = document.createElement('div');
+        dot.className = 'cal-cp-dot';
+        dot.style.background = cp.groupColor;
+        dot.title = `${cp.name} · ${cp.project}`;
+        cluster.appendChild(dot);
       });
+      el.appendChild(cluster);
     }
 
     // Dot for live agenda events
