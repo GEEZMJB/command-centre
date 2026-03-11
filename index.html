@@ -456,6 +456,22 @@
     font-style: italic;
   }
 
+  /* ── WORKFLOW GROUPS ── */
+  .workflow-group { margin-bottom: 4px; }
+  .workflow-group-named { margin-bottom: 16px; }
+  .workflow-group-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+  }
+  .workflow-group-item { padding-left: 8px; border-left: 2px solid var(--border); margin-bottom: 16px; }
+  .workflow-group-item:last-child { margin-bottom: 0; }
+  .workflow-group-item .workflow-item { margin-bottom: 0; }
+
   /* ── TASKS PANEL ── */
   .panel-tasks { grid-column: 1 / 3; grid-row: 2 / 3; }
 
@@ -840,10 +856,12 @@ function renderCalendar() {
   const last = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0);
   const today = new Date();
 
-  // Derive checkpoint days from actual data for the displayed month
+  // Derive checkpoint days from actual (non-dismissed) data for the displayed month
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dismissedCPs = getDismissedCPs();
   const checkpointDays = new Set();
   (data.checkpoints || []).forEach(cp => {
+    if (dismissedCPs.has(`${cp.date}|${cp.name}`)) return;
     const monthIdx = monthNames.findIndex(m => cp.date.includes(m));
     const dayMatch = cp.date.match(/\d+/);
     if (monthIdx === calDate.getMonth() && dayMatch) {
@@ -909,18 +927,43 @@ function changeMonth(dir) {
   renderCalendar();
 }
 
+function getDismissedCPs() {
+  try { return new Set(JSON.parse(localStorage.getItem('dismissedCheckpoints') || '[]')); }
+  catch { return new Set(); }
+}
+
+function dismissCheckpoint(key) {
+  const dismissed = getDismissedCPs();
+  dismissed.add(key);
+  localStorage.setItem('dismissedCheckpoints', JSON.stringify([...dismissed]));
+  renderCheckpoints();
+  renderCalendar();
+}
+
 function renderCheckpoints() {
+  const dismissed = getDismissedCPs();
   const list = document.getElementById('checkpoints-list');
-  list.innerHTML = data.checkpoints.map(cp => `
-    <div class="checkpoint-item">
+  const active = (data.checkpoints || []).filter(cp => !dismissed.has(`${cp.date}|${cp.name}`));
+  if (active.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">All checkpoints cleared ✓</div>';
+    return;
+  }
+  list.innerHTML = active.map(cp => {
+    const key = `${cp.date}|${cp.name}`.replace(/'/g, "\\'");
+    return `
+    <div class="checkpoint-item" style="align-items:center;gap:8px;">
+      <button onclick="dismissCheckpoint('${key}')" title="Mark complete"
+        style="width:15px;height:15px;min-width:15px;border:1px solid var(--border);border-radius:3px;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:transparent;font-size:9px;flex-shrink:0;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='transparent'">✓</button>
       <div class="checkpoint-date">${cp.date}</div>
       <div class="checkpoint-bar" style="background:${cp.color}"></div>
       <div class="checkpoint-info">
         <div class="checkpoint-name">${cp.name}</div>
         <div class="checkpoint-project">${cp.project}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderAgenda() {
@@ -948,7 +991,8 @@ function renderAgenda() {
 function renderWorkflows() {
   const list = document.getElementById('workflows-list');
   const colors = { active: '#7abf8a', blocked: '#bf7a7a', review: '#c8a87a', planned: '#55556a' };
-  list.innerHTML = data.workflows.map(wf => `
+
+  const renderWf = wf => `
     <div class="workflow-item">
       <div class="workflow-header">
         <div class="workflow-name">${wf.name}</div>
@@ -961,8 +1005,25 @@ function renderWorkflows() {
         <span class="status-badge status-${wf.status}">${wf.status}</span>
         <span class="workflow-next">${wf.next}</span>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+
+  // Group workflows; preserve insertion order of groups
+  const groupOrder = [];
+  const groups = {};
+  (data.workflows || []).forEach(wf => {
+    const g = wf.group || '—';
+    if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+    groups[g].push(wf);
+  });
+
+  list.innerHTML = groupOrder.map(g => {
+    const isUngrouped = g === '—';
+    const header = isUngrouped ? '' : `<div class="workflow-group-label">${g}</div>`;
+    const items = groups[g].map(wf =>
+      `<div class="workflow-group-item">${renderWf(wf)}</div>`
+    ).join('');
+    return `<div class="workflow-group ${isUngrouped ? '' : 'workflow-group-named'}">${header}<div class="workflow-group-items">${items}</div></div>`;
+  }).join('');
 }
 
 function renderTasks() {
