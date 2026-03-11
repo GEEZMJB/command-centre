@@ -463,12 +463,16 @@
     font-size: 9px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text3);
     border-bottom: 1px solid var(--border);
     padding-bottom: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
-  .workflow-group-item { padding-left: 8px; border-left: 2px solid var(--border); margin-bottom: 16px; }
+  .workflow-group-item {
+    padding: 8px 10px;
+    border-left: 2px solid var(--border);
+    margin-bottom: 10px;
+    border-radius: 0 4px 4px 0;
+  }
   .workflow-group-item:last-child { margin-bottom: 0; }
   .workflow-group-item .workflow-item { margin-bottom: 0; }
 
@@ -805,6 +809,42 @@ document.getElementById('pwd-input').addEventListener('keydown', e => {
 // ── LIVE DATA ──
 let data = { checkpoints: [], agenda: [], workflows: [], tasks: [] };
 
+// ── Group colour palette ─────────────────────────────────────────────────────
+const GROUP_COLORS = {
+  'Jobseek': {
+    color:   '#6a9cd8',
+    bg:      'rgba(106,156,216,0.09)',
+    border:  'rgba(106,156,216,0.35)',
+    keys:    ['jobseek','grant','assessor','meal','evaluation','sprint','track 0','track 2','track 4','freelance','blume','linkedin','voctech','rosa fund','city bridge','high trees']
+  },
+  'Skate Haven Admin': {
+    color:   '#e07838',
+    bg:      'rgba(224,120,56,0.09)',
+    border:  'rgba(224,120,56,0.35)',
+    keys:    ['skate','haven','cic','easter camp','hanwen','safeguarding','companies house','tom','canada water']
+  },
+  'Dashboard Setup': {
+    color:   '#a07abf',
+    bg:      'rgba(160,122,191,0.09)',
+    border:  'rgba(160,122,191,0.35)',
+    keys:    ['dashboard','plash','github','config']
+  }
+};
+
+function getGroupStyle(name) {
+  if (!name) return null;
+  const lower = name.toLowerCase();
+  for (const [group, s] of Object.entries(GROUP_COLORS)) {
+    if (lower.includes(group.toLowerCase()) || s.keys.some(k => lower.includes(k)))
+      return { group, ...s };
+  }
+  return null;
+}
+
+function groupStyleForWorkflowGroup(groupName) {
+  return GROUP_COLORS[groupName] || null;
+}
+
 async function loadDashboardData() {
   try {
     const resp = await fetch('dashboard-data.json?t=' + Date.now());
@@ -950,17 +990,22 @@ function renderCheckpoints() {
   }
   list.innerHTML = active.map(cp => {
     const key = `${cp.date}|${cp.name}`.replace(/'/g, "\\'");
+    const gs  = getGroupStyle(cp.project);
+    const wrapStyle = gs
+      ? `align-items:center;gap:8px;border-left:2px solid ${gs.border};background:${gs.bg};padding:5px 8px;border-radius:0 4px 4px 0;margin-bottom:4px;`
+      : 'align-items:center;gap:8px;';
+    const barColor = gs ? gs.color : cp.color;
     return `
-    <div class="checkpoint-item" style="align-items:center;gap:8px;">
+    <div class="checkpoint-item" style="${wrapStyle}">
       <button onclick="dismissCheckpoint('${key}')" title="Mark complete"
         style="width:15px;height:15px;min-width:15px;border:1px solid var(--border);border-radius:3px;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:transparent;font-size:9px;flex-shrink:0;transition:all .15s;"
         onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
         onmouseout="this.style.borderColor='var(--border)';this.style.color='transparent'">✓</button>
       <div class="checkpoint-date">${cp.date}</div>
-      <div class="checkpoint-bar" style="background:${cp.color}"></div>
+      <div class="checkpoint-bar" style="background:${barColor}"></div>
       <div class="checkpoint-info">
         <div class="checkpoint-name">${cp.name}</div>
-        <div class="checkpoint-project">${cp.project}</div>
+        <div class="checkpoint-project" style="${gs ? `color:${gs.color};` : ''}">${cp.project}</div>
       </div>
     </div>`;
   }).join('');
@@ -1018,9 +1063,12 @@ function renderWorkflows() {
 
   list.innerHTML = groupOrder.map(g => {
     const isUngrouped = g === '—';
-    const header = isUngrouped ? '' : `<div class="workflow-group-label">${g}</div>`;
+    const gs = isUngrouped ? null : groupStyleForWorkflowGroup(g);
+    const labelStyle = gs ? `color:${gs.color};border-bottom-color:${gs.border};` : '';
+    const itemStyle  = gs ? `border-left-color:${gs.border};background:${gs.bg};` : '';
+    const header = isUngrouped ? '' : `<div class="workflow-group-label" style="${labelStyle}">${g}</div>`;
     const items = groups[g].map(wf =>
-      `<div class="workflow-group-item">${renderWf(wf)}</div>`
+      `<div class="workflow-group-item" style="${itemStyle}">${renderWf(wf)}</div>`
     ).join('');
     return `<div class="workflow-group ${isUngrouped ? '' : 'workflow-group-named'}">${header}<div class="workflow-group-items">${items}</div></div>`;
   }).join('');
@@ -1037,19 +1085,23 @@ function renderTasks() {
   const pending = filtered.filter(t => !t.done);
   const done = filtered.filter(t => t.done);
 
-  const renderItem = t => `
-    <div class="task-item ${t.done ? 'done' : ''} pri-${t.priority}-item" onclick="toggleTask(${t.id})">
+  const renderItem = t => {
+    const gs = getGroupStyle(t.project);
+    const bgStyle = gs && !t.done ? `background:${gs.bg};` : '';
+    const projStyle = gs ? `color:${gs.color};` : '';
+    return `
+    <div class="task-item ${t.done ? 'done' : ''} pri-${t.priority}-item" style="${bgStyle}" onclick="toggleTask(${t.id})">
       <div class="task-check"></div>
       <div class="task-body">
         <div class="task-title">${t.title}</div>
         <div class="task-meta">
-          <span class="task-project">${t.project}</span>
+          <span class="task-project" style="${projStyle}">${t.project}</span>
           <span class="task-due due-${t.due === 'overdue' ? 'overdue' : t.due === 'today' ? 'today' : 'upcoming'}">${t.due}</span>
         </div>
       </div>
       <div class="priority-dot pri-${t.priority}"></div>
-    </div>
-  `;
+    </div>`;
+  };
 
   list.innerHTML = pending.map(renderItem).join('') +
     (done.length ? `<div class="section-divider">Completed</div>` + done.map(renderItem).join('') : '');
