@@ -840,9 +840,16 @@ function renderCalendar() {
   const last = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0);
   const today = new Date();
 
-  // Days with events (sample)
-  const eventDays = [5, 11, 12, 17, 18, 21, 25, 28];
-  const checkpointDays = [12, 17, 21, 28];
+  // Derive checkpoint days from actual data for the displayed month
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const checkpointDays = new Set();
+  (data.checkpoints || []).forEach(cp => {
+    const monthIdx = monthNames.findIndex(m => cp.date.includes(m));
+    const dayMatch = cp.date.match(/\d+/);
+    if (monthIdx === calDate.getMonth() && dayMatch) {
+      checkpointDays.add(parseInt(dayMatch[0]));
+    }
+  });
 
   let startDay = first.getDay() === 0 ? 6 : first.getDay() - 1;
 
@@ -860,11 +867,8 @@ function renderCalendar() {
     const el = document.createElement('div');
     let cls = 'cal-day';
     if (d === today.getDate() && calDate.getMonth() === today.getMonth() && calDate.getFullYear() === today.getFullYear()) cls += ' today';
-    const hasEvent = eventDays.includes(d);
-    const hasCP = checkpointDays.includes(d);
-    if (hasEvent && hasCP) cls += ' has-both';
-    else if (hasCP) cls += ' has-checkpoint';
-    else if (hasEvent) cls += ' has-event';
+    const hasCP = checkpointDays.has(d);
+    if (hasCP) cls += ' has-checkpoint';
     el.className = cls;
     el.textContent = d;
     // Build date string for this cell
@@ -1050,14 +1054,18 @@ function openOverlay(date) {
   if (dayEvts.length === 0) {
     evList.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">Nothing scheduled</div>';
   } else {
-    evList.innerHTML = dayEvts.map(e => `
+    evList.innerHTML = dayEvts.map((e, i) => `
       <div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">
-        <div style="font-size:0.8rem;color:var(--text3);min-width:38px;padding-top:1px;">${e.time}</div>
+        <div style="font-size:0.8rem;color:var(--text3);min-width:38px;padding-top:2px;">${e.time}</div>
         <div style="flex:1;">
           <div style="font-size:0.9rem;color:var(--text);font-weight:500;">${e.title}</div>
           <div style="font-size:0.75rem;color:var(--text3);">${e.calendar || ''}</div>
         </div>
         <span class="agenda-tag tag-${e.tag}" style="margin-top:2px;">${e.tag}</span>
+        <button onclick="removeEvent('${dateStr}','${e.title.replace(/'/g,"\\'")}',this)" title="Remove from dashboard"
+          style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;line-height:1;margin-top:1px;flex-shrink:0;" 
+          onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">✕</button>
       </div>`).join('');
   }
 
@@ -1065,6 +1073,17 @@ function openOverlay(date) {
   document.getElementById('overlay-day-view').style.display    = '';
   document.getElementById('overlay-create-form').style.display = 'none';
   document.getElementById('event-overlay').classList.add('open');
+}
+
+function removeEvent(dateStr, title) {
+  // Remove from local agenda (hides from dashboard until next sync)
+  data.agenda = (data.agenda || []).filter(e =>
+    !(e._date && e._date.slice(0,10) === dateStr && e.title === title)
+  );
+  renderAgenda();
+  renderCalendar();
+  // Refresh the day view so the removed event disappears
+  openOverlay(overlayDate);
 }
 
 function showDayView() {
@@ -1179,7 +1198,10 @@ function updateSyncTime() {
         <div>
           <div class="overlay-title" id="overlay-day-label" style="margin-bottom:0"></div>
         </div>
-        <button class="overlay-btn cancel" onclick="closeOverlay()" style="padding:2px 8px;font-size:11px;">✕</button>
+        <button onclick="closeOverlay()" title="Close"
+          style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);cursor:pointer;font-size:13px;flex-shrink:0;"
+          onmouseover="this.style.borderColor='var(--text2)'"
+          onmouseout="this.style.borderColor='var(--border)'">✕</button>
       </div>
       <div id="overlay-events-list" style="min-height:40px;max-height:220px;overflow-y:auto;margin-bottom:12px;"></div>
       <div class="overlay-actions">
