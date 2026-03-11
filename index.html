@@ -298,8 +298,14 @@
     border-radius: 50%;
     background: var(--accent2);
   }
-  .cal-day.has-checkpoint::after { background: #5bb8c8; }
-  .cal-day.has-both::after { background: var(--purple); }
+  /* checkpoint top-bar replaces the old ::after dot */
+  .cal-checkpoint-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 2px 2px 0 0;
+    pointer-events: none;
+  }
 
   /* ── CHECKPOINTS in calendar ── */
   .checkpoints {
@@ -896,16 +902,19 @@ function renderCalendar() {
   const last = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0);
   const today = new Date();
 
-  // Derive checkpoint days from actual (non-dismissed) data for the displayed month
+  // Build checkpoint map for displayed month: day → [{name, project, groupColor}]
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dismissedCPs = getDismissedCPs();
-  const checkpointDays = new Set();
+  const cpMap = {};
   (data.checkpoints || []).forEach(cp => {
     if (dismissedCPs.has(`${cp.date}|${cp.name}`)) return;
     const monthIdx = monthNames.findIndex(m => cp.date.includes(m));
     const dayMatch = cp.date.match(/\d+/);
     if (monthIdx === calDate.getMonth() && dayMatch) {
-      checkpointDays.add(parseInt(dayMatch[0]));
+      const day = parseInt(dayMatch[0]);
+      if (!cpMap[day]) cpMap[day] = [];
+      const gs = getGroupStyle(cp.project);
+      cpMap[day].push({ name: cp.name, project: cp.project, groupColor: gs ? gs.color : '#5bb8c8' });
     }
   });
 
@@ -925,13 +934,25 @@ function renderCalendar() {
     const el = document.createElement('div');
     let cls = 'cal-day';
     if (d === today.getDate() && calDate.getMonth() === today.getMonth() && calDate.getFullYear() === today.getFullYear()) cls += ' today';
-    const hasCP = checkpointDays.has(d);
-    if (hasCP) cls += ' has-checkpoint';
+    // position:relative needed for checkpoint bar + event dot
+    if (cpMap[d]) cls += ' has-checkpoint';
     el.className = cls;
     el.textContent = d;
     // Build date string for this cell
     const cellDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
     el.onclick = () => openOverlay(cellDate);
+    // Checkpoint top-bar(s)
+    if (cpMap[d]) {
+      el.style.position = 'relative';
+      cpMap[d].forEach(cp => {
+        const bar = document.createElement('div');
+        bar.className = 'cal-checkpoint-bar';
+        bar.style.background = cp.groupColor;
+        bar.title = `${cp.name} · ${cp.project}`;
+        el.appendChild(bar);
+      });
+    }
+
     // Dot for live agenda events
     const agendaDay = (data.agenda || []).filter(ev => {
       if (!ev._date) return false;
@@ -1164,10 +1185,32 @@ function openOverlay(date) {
   const dateStr  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
   const dayEvts  = (data.agenda || []).filter(e => e._date && e._date.slice(0,10) === dateStr);
   const evList   = document.getElementById('overlay-events-list');
-  if (dayEvts.length === 0) {
+  // Also surface checkpoints for this day
+  const mnNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dismissed = getDismissedCPs();
+  const dayCPs = (data.checkpoints || []).filter(cp => {
+    if (dismissed.has(`${cp.date}|${cp.name}`)) return false;
+    const mIdx = mnNames.findIndex(m => cp.date.includes(m));
+    const dm = cp.date.match(/\d+/);
+    return mIdx === date.getMonth() && dm && parseInt(dm[0]) === date.getDate();
+  });
+  const cpHtml = dayCPs.map(cp => {
+    const gs = getGroupStyle(cp.project);
+    const col = gs ? gs.color : '#5bb8c8';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <div style="width:3px;height:28px;border-radius:2px;background:${col};flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:0.8rem;color:${col};font-weight:600;letter-spacing:.05em;text-transform:uppercase;">Checkpoint</div>
+        <div style="font-size:0.9rem;color:var(--text);font-weight:500;">${cp.name}</div>
+        <div style="font-size:0.75rem;color:var(--text3);">${cp.project}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (dayEvts.length === 0 && dayCPs.length === 0) {
     evList.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">Nothing scheduled</div>';
   } else {
-    evList.innerHTML = dayEvts.map((e, i) => `
+    const evHtml = dayEvts.map(e => `
       <div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">
         <div style="font-size:0.8rem;color:var(--text3);min-width:38px;padding-top:2px;">${e.time}</div>
         <div style="flex:1;">
@@ -1176,10 +1219,11 @@ function openOverlay(date) {
         </div>
         <span class="agenda-tag tag-${e.tag}" style="margin-top:2px;">${e.tag}</span>
         <button onclick="removeEvent('${dateStr}','${e.title.replace(/'/g,"\\'")}',this)" title="Remove from dashboard"
-          style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;line-height:1;margin-top:1px;flex-shrink:0;" 
+          style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;line-height:1;margin-top:1px;flex-shrink:0;"
           onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">✕</button>
       </div>`).join('');
+    evList.innerHTML = cpHtml + evHtml;
   }
 
   // Always open to day view
