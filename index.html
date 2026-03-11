@@ -20,6 +20,7 @@
     --green: #7abf8a;
     --red: #bf7a7a;
     --amber: #c8a87a;
+    --skate-orange: #e07838;
     --purple: #9a8abf;
   }
 
@@ -297,7 +298,7 @@
     border-radius: 50%;
     background: var(--accent2);
   }
-  .cal-day.has-checkpoint::after { background: var(--amber); }
+  .cal-day.has-checkpoint::after { background: #5bb8c8; }
   .cal-day.has-both::after { background: var(--purple); }
 
   /* ── CHECKPOINTS in calendar ── */
@@ -389,6 +390,7 @@
 
   .tag-work { color: var(--accent2); border-color: var(--accent2); }
   .tag-personal { color: var(--purple); border-color: var(--purple); }
+  .tag-skate { color: var(--skate-orange); border-color: var(--skate-orange); }
   .tag-deadline { color: var(--amber); border-color: var(--amber); }
 
   /* ── WORKFLOWS PANEL ── */
@@ -878,7 +880,9 @@ function renderCalendar() {
     });
     if (agendaDay.length) {
       const dot = document.createElement('span');
-      dot.style.cssText = 'position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent2);display:block;';
+      const hasSkate = agendaDay.some(e => e.tag === 'skate');
+      const dotColor = hasSkate ? 'var(--skate-orange)' : 'var(--accent2)';
+      dot.style.cssText = `position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:${dotColor};display:block;`;
       el.style.position = 'relative';
       el.appendChild(dot);
     }
@@ -917,12 +921,20 @@ function renderCheckpoints() {
 
 function renderAgenda() {
   const list = document.getElementById('agenda-list');
-  list.innerHTML = data.agenda.map(item => `
+  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const todayEvents = (data.agenda || []).filter(item =>
+    item._date && item._date.slice(0, 10) === todayStr
+  );
+  if (todayEvents.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);padding:14px 0;font-size:0.85rem;text-align:center;">Nothing scheduled today</div>';
+    return;
+  }
+  list.innerHTML = todayEvents.map(item => `
     <div class="agenda-item">
       <div class="agenda-time">${item.time}</div>
       <div class="agenda-body">
         <div class="agenda-title">${item.title}</div>
-        <div class="agenda-meta">${item.meta}</div>
+        <div class="agenda-meta">${[item.meta, item.calendar].filter(Boolean).join(' · ')}</div>
         <span class="agenda-tag tag-${item.tag}">${item.tag}</span>
       </div>
     </div>
@@ -1025,17 +1037,52 @@ function openOverlay(date) {
   overlayDate = date;
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  document.getElementById('overlay-date-label').textContent =
-    `${days[date.getDay()]} · ${date.getDate()} ${months[date.getMonth()]}`;
+  const label  = `${days[date.getDay()]} · ${date.getDate()} ${months[date.getMonth()]}`;
+
+  // Set labels on both views
+  document.getElementById('overlay-day-label').textContent  = label;
+  document.getElementById('overlay-date-label').textContent = label;
+
+  // Populate events for this day
+  const dateStr  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  const dayEvts  = (data.agenda || []).filter(e => e._date && e._date.slice(0,10) === dateStr);
+  const evList   = document.getElementById('overlay-events-list');
+  if (dayEvts.length === 0) {
+    evList.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">Nothing scheduled</div>';
+  } else {
+    evList.innerHTML = dayEvts.map(e => `
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:0.8rem;color:var(--text3);min-width:38px;padding-top:1px;">${e.time}</div>
+        <div style="flex:1;">
+          <div style="font-size:0.9rem;color:var(--text);font-weight:500;">${e.title}</div>
+          <div style="font-size:0.75rem;color:var(--text3);">${e.calendar || ''}</div>
+        </div>
+        <span class="agenda-tag tag-${e.tag}" style="margin-top:2px;">${e.tag}</span>
+      </div>`).join('');
+  }
+
+  // Always open to day view
+  document.getElementById('overlay-day-view').style.display    = '';
+  document.getElementById('overlay-create-form').style.display = 'none';
+  document.getElementById('event-overlay').classList.add('open');
+}
+
+function showDayView() {
+  document.getElementById('overlay-day-view').style.display    = '';
+  document.getElementById('overlay-create-form').style.display = 'none';
+}
+
+function showCreateForm() {
   document.getElementById('ev-title').value  = '';
   document.getElementById('ev-start').value  = '09:00';
   document.getElementById('ev-end').value    = '10:00';
   document.getElementById('ev-tag').value    = 'work';
   document.getElementById('overlay-status').textContent = '';
   document.getElementById('overlay-status').className   = 'overlay-status';
-  document.getElementById('event-overlay').classList.add('open');
+  document.getElementById('overlay-day-view').style.display    = 'none';
+  document.getElementById('overlay-create-form').style.display = '';
   setTimeout(() => document.getElementById('ev-title').focus(), 50);
-  // Request GCal token if not yet authed
+  // Request GCal token silently if not yet authed
   if (!gcalToken && window._gcalClient) {
     window._gcalClient.requestAccessToken({ prompt: '' });
   }
@@ -1097,16 +1144,18 @@ async function saveEvent() {
     // Add to local agenda immediately for visual feedback
     if (!data.agenda) data.agenda = [];
     data.agenda.push({
-      time:  startStr,
-      title: title,
-      meta:  '',
-      tag:   tag,
-      _date: `${yr}-${mo}-${day}`
+      time:     startStr,
+      title:    title,
+      meta:     '',
+      tag:      tag,
+      calendar: '',
+      _date:    `${yr}-${mo}-${day}T${startStr}:00`
     });
     renderAgenda();
     renderCalendar();
 
-    setTimeout(closeOverlay, 1200);
+    // Go back to day view (now showing the newly added event) after a beat
+    setTimeout(() => openOverlay(overlayDate), 1000);
   } catch(e) {
     status.textContent = 'failed: ' + e.message;
     status.className   = 'overlay-status err';
@@ -1123,26 +1172,49 @@ function updateSyncTime() {
 <!-- ── EVENT CREATE OVERLAY ── -->
 <div id="event-overlay">
   <div class="overlay-box">
-    <div>
-      <div class="overlay-title">New Event</div>
-      <div class="overlay-date-label" id="overlay-date-label"></div>
+
+    <!-- ── Day View (shown on first click) ── -->
+    <div id="overlay-day-view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div class="overlay-title" id="overlay-day-label" style="margin-bottom:0"></div>
+        </div>
+        <button class="overlay-btn cancel" onclick="closeOverlay()" style="padding:2px 8px;font-size:11px;">✕</button>
+      </div>
+      <div id="overlay-events-list" style="min-height:40px;max-height:220px;overflow-y:auto;margin-bottom:12px;"></div>
+      <div class="overlay-actions">
+        <button class="overlay-btn primary" style="width:100%" onclick="showCreateForm()">＋ New Event</button>
+      </div>
     </div>
-    <input class="overlay-input" id="ev-title" type="text" placeholder="Event title" autocomplete="off" />
-    <div class="overlay-row">
-      <input class="overlay-input" id="ev-start" type="time" value="09:00" />
-      <input class="overlay-input" id="ev-end"   type="time" value="10:00" />
+
+    <!-- ── Create Form (shown after clicking + New Event) ── -->
+    <div id="overlay-create-form" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <button class="overlay-btn cancel" onclick="showDayView()" style="padding:2px 8px;font-size:11px;">← back</button>
+        <div>
+          <div class="overlay-title" style="margin-bottom:0">New Event</div>
+          <div class="overlay-date-label" id="overlay-date-label"></div>
+        </div>
+      </div>
+      <input class="overlay-input" id="ev-title" type="text" placeholder="Event title" autocomplete="off" />
+      <div class="overlay-row">
+        <input class="overlay-input" id="ev-start" type="time" value="09:00" />
+        <input class="overlay-input" id="ev-end"   type="time" value="10:00" />
+      </div>
+      <select class="overlay-select" id="ev-tag">
+        <option value="work">work</option>
+        <option value="personal">personal</option>
+        <option value="skate">skate haven</option>
+        <option value="deadline">deadline</option>
+      </select>
+      <div class="overlay-status" id="overlay-status"></div>
+      <div class="overlay-actions">
+        <button class="overlay-btn cancel" onclick="closeOverlay()">cancel</button>
+        <button class="overlay-btn primary" onclick="saveEvent()">save to GCal</button>
+      </div>
+      <div id="gcal-badge">● not connected to GCal</div>
     </div>
-    <select class="overlay-select" id="ev-tag">
-      <option value="work">work</option>
-      <option value="personal">personal</option>
-      <option value="deadline">deadline</option>
-    </select>
-    <div class="overlay-status" id="overlay-status"></div>
-    <div class="overlay-actions">
-      <button class="overlay-btn cancel" onclick="closeOverlay()">cancel</button>
-      <button class="overlay-btn primary" onclick="saveEvent()">save to GCal</button>
-    </div>
-    <div id="gcal-badge">● not connected to GCal</div>
+
   </div>
 </div>
 
