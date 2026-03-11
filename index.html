@@ -866,6 +866,7 @@ let calDate = new Date();
 
 async function init() {
   await loadDashboardData();
+  applyPersistedState();
   initGcalAuth();
   renderHeader();
   renderCalendar();
@@ -988,9 +989,36 @@ function changeMonth(dir) {
   renderCalendar();
 }
 
+// ── Persistence helpers (localStorage) ──────────────────────────────────────
+
 function getDismissedCPs() {
   try { return new Set(JSON.parse(localStorage.getItem('dismissedCheckpoints') || '[]')); }
   catch { return new Set(); }
+}
+
+function getRemovedEvents() {
+  try { return new Set(JSON.parse(localStorage.getItem('removedEvents') || '[]')); }
+  catch { return new Set(); }
+}
+
+function getDoneTaskKeys() {
+  try { return new Set(JSON.parse(localStorage.getItem('doneTasks') || '[]')); }
+  catch { return new Set(); }
+}
+
+function taskKey(t) { return `${t.title}|||${t.project}`; }
+
+// Apply persisted state onto freshly-loaded data
+function applyPersistedState() {
+  const removed  = getRemovedEvents();
+  const doneKeys = getDoneTaskKeys();
+  data.agenda = (data.agenda || []).filter(e => {
+    const k = `${(e._date||'').slice(0,10)}|||${e.title}`;
+    return !removed.has(k);
+  });
+  (data.tasks || []).forEach(t => {
+    if (doneKeys.has(taskKey(t))) t.done = true;
+  });
 }
 
 function dismissCheckpoint(key) {
@@ -1130,7 +1158,14 @@ function renderTasks() {
 
 function toggleTask(id) {
   const task = data.tasks.find(t => t.id === id);
-  if (task) { task.done = !task.done; renderTasks(); }
+  if (!task) return;
+  task.done = !task.done;
+  // Persist done state
+  const doneKeys = getDoneTaskKeys();
+  if (task.done) doneKeys.add(taskKey(task));
+  else           doneKeys.delete(taskKey(task));
+  localStorage.setItem('doneTasks', JSON.stringify([...doneKeys]));
+  renderTasks();
 }
 
 function filterTasks(filter, btn) {
@@ -1233,13 +1268,17 @@ function openOverlay(date) {
 }
 
 function removeEvent(dateStr, title) {
-  // Remove from local agenda (hides from dashboard until next sync)
+  // Persist removal so it survives refresh
+  const key      = `${dateStr}|||${title}`;
+  const removed  = getRemovedEvents();
+  removed.add(key);
+  localStorage.setItem('removedEvents', JSON.stringify([...removed]));
+  // Remove from in-memory agenda
   data.agenda = (data.agenda || []).filter(e =>
     !(e._date && e._date.slice(0,10) === dateStr && e.title === title)
   );
   renderAgenda();
   renderCalendar();
-  // Refresh the day view so the removed event disappears
   openOverlay(overlayDate);
 }
 
