@@ -1184,6 +1184,44 @@ const GCAL_CALENDAR  = 'migisjobbot@gmail.com';
 
 let gcalToken = null;
 
+// ── Local calendar bridge (writes to Apple Calendar → iCloud) ────────────────
+// Tries localhost first (Mac mini direct), falls back to LAN IP for other devices
+const CAL_SERVER_URLS = ['http://localhost:7891', 'http://192.168.1.108:7891'];
+let _calServerUrl = null;
+
+async function getCalServerUrl() {
+  if (_calServerUrl) return _calServerUrl;
+  for (const url of CAL_SERVER_URLS) {
+    try {
+      const r = await fetch(`${url}/ping`, { signal: AbortSignal.timeout(1500) });
+      if (r.ok) { _calServerUrl = url; return url; }
+    } catch {}
+  }
+  return null;
+}
+
+async function calServerPost(path, body) {
+  const url = await getCalServerUrl();
+  if (!url) throw new Error('Calendar bridge not reachable');
+  const r = await fetch(`${url}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function calServerDelete(path, body) {
+  const url = await getCalServerUrl();
+  if (!url) throw new Error('Calendar bridge not reachable');
+  const r = await fetch(`${url}${path}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
 function initGcalAuth() {
   if (!GCAL_CLIENT_ID || GCAL_CLIENT_ID === 'YOUR_CLIENT_ID') return;
   try {
@@ -1267,12 +1305,13 @@ function openOverlay(date) {
   document.getElementById('event-overlay').classList.add('open');
 }
 
-function removeEvent(dateStr, title) {
-  // Persist removal so it survives refresh
-  const key      = `${dateStr}|||${title}`;
-  const removed  = getRemovedEvents();
+async function removeEvent(dateStr, title) {
+  // Persist removal in localStorage (survives refresh)
+  const key     = `${dateStr}|||${title}`;
+  const removed = getRemovedEvents();
   removed.add(key);
   localStorage.setItem('removedEvents', JSON.stringify([...removed]));
+
   // Remove from in-memory agenda
   data.agenda = (data.agenda || []).filter(e =>
     !(e._date && e._date.slice(0,10) === dateStr && e.title === title)
@@ -1280,6 +1319,14 @@ function removeEvent(dateStr, title) {
   renderAgenda();
   renderCalendar();
   openOverlay(overlayDate);
+
+  // Also delete from Apple Calendar → iCloud → all devices
+  try {
+    await calServerDelete('/events', { title, date: dateStr });
+    console.log(`Deleted "${title}" from Apple Calendar`);
+  } catch (err) {
+    console.warn('Apple Calendar delete skipped (bridge offline):', err.message);
+  }
 }
 
 function showDayView() {
@@ -1356,6 +1403,25 @@ async function saveEvent() {
     status.textContent = '✓ saved to Google Calendar';
     status.className   = 'overlay-status ok';
 
+    // Also write to Apple Calendar (→ iCloud → all devices) for skate/personal tags
+    const calMap = { skate: 'Skate Haven Calendar', personal: 'Home' };
+    const appleCalName = calMap[tag];
+    if (appleCalName) {
+      try {
+        await calServerPost('/events', {
+          title,
+          start: `${yr}-${mo}-${day}T${startStr}:00`,
+          end:   `${yr}-${mo}-${day}T${endStr}:00`,
+          calendar: appleCalName,
+          tag
+        });
+        status.textContent = `✓ saved to GCal + ${appleCalName}`;
+      } catch (calErr) {
+        status.textContent = '✓ saved to GCal (Apple Calendar bridge offline)';
+        console.warn('Calendar bridge:', calErr.message);
+      }
+    }
+
     // Add to local agenda immediately for visual feedback
     if (!data.agenda) data.agenda = [];
     data.agenda.push({
@@ -1363,14 +1429,14 @@ async function saveEvent() {
       title:    title,
       meta:     '',
       tag:      tag,
-      calendar: '',
+      calendar: appleCalName || '',
       _date:    `${yr}-${mo}-${day}T${startStr}:00`
     });
     renderAgenda();
     renderCalendar();
 
-    // Go back to day view (now showing the newly added event) after a beat
-    setTimeout(() => openOverlay(overlayDate), 1000);
+    // Go back to day view after a beat
+    setTimeout(() => openOverlay(overlayDate), 1200);
   } catch(e) {
     status.textContent = 'failed: ' + e.message;
     status.className   = 'overlay-status err';
