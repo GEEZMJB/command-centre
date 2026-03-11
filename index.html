@@ -1185,12 +1185,19 @@ const GCAL_CALENDAR  = 'migisjobbot@gmail.com';
 let gcalToken = null;
 
 // ── Local calendar bridge (writes to Apple Calendar → iCloud) ────────────────
-// Tries localhost first (Mac mini direct), falls back to LAN IP for other devices
+// When served from localhost:7891 the bridge is same-origin (no CORS/mixed-content).
+// Falls back to LAN IP so other devices on the same WiFi also work.
 const CAL_SERVER_URLS = ['http://localhost:7891', 'http://192.168.1.108:7891'];
 let _calServerUrl = null;
 
 async function getCalServerUrl() {
   if (_calServerUrl) return _calServerUrl;
+  // If the page is already served by the local server, use its own origin
+  if (window.location.hostname === 'localhost' || window.location.hostname === '192.168.1.108') {
+    _calServerUrl = window.location.origin;
+    return _calServerUrl;
+  }
+  // Otherwise probe (works if browser allows HTTP fetch from HTTPS — unlikely)
   for (const url of CAL_SERVER_URLS) {
     try {
       const r = await fetch(`${url}/ping`, { signal: AbortSignal.timeout(1500) });
@@ -1202,7 +1209,7 @@ async function getCalServerUrl() {
 
 async function calServerPost(path, body) {
   const url = await getCalServerUrl();
-  if (!url) throw new Error('Calendar bridge not reachable');
+  if (!url) throw new Error('Calendar bridge not reachable — open http://localhost:7891');
   const r = await fetch(`${url}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1213,7 +1220,7 @@ async function calServerPost(path, body) {
 
 async function calServerDelete(path, body) {
   const url = await getCalServerUrl();
-  if (!url) throw new Error('Calendar bridge not reachable');
+  if (!url) throw new Error('Calendar bridge not reachable — open http://localhost:7891');
   const r = await fetch(`${url}${path}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
