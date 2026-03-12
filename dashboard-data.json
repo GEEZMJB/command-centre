@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-11T21:37:32",
+  "lastSync": "2026-03-12T15:12:27",
   "checkpoints": [
     {
       "date": "Mar 12",
@@ -24,17 +24,27 @@
       "name": "MEAL role scan complete",
       "project": "MEAL / Evaluation Roles",
       "color": "#a8c87a"
+    },
+    {
+      "date": "Mar 12",
+      "name": "Hanwen's onboarding (CYH & Coop)",
+      "project": "Skate Haven CIC",
+      "color": "#bf7a7a"
+    },
+    {
+      "date": "Mar 12",
+      "name": "Camp promo has started",
+      "project": "Skate Haven CIC",
+      "color": "#7ab8c8"
+    },
+    {
+      "date": "Mar 12",
+      "name": "Approach Tom",
+      "project": "Skate Haven CIC",
+      "color": "#c8a87a"
     }
   ],
   "agenda": [
-    {
-      "time": "09:00",
-      "_date": "2026-03-18T09:00:00",
-      "title": "Test",
-      "meta": "1h",
-      "tag": "work",
-      "calendar": "migisjobbot@gmail.com"
-    },
     {
       "time": "00:00",
       "_date": "2026-03-20T00:00:00",
@@ -94,7 +104,7 @@
       "id": 1,
       "title": "Launch Easter Camp Booking link",
       "project": "SKATE HAVEN",
-      "due": "tomorrow",
+      "due": "today",
       "priority": "high",
       "done": false
     },
