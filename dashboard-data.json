@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-12T15:14:38",
+  "lastSync": "2026-03-13T08:40:09",
   "checkpoints": [
     {
       "date": "Mar 12",
@@ -36,6 +36,12 @@
       "name": "Approach Tom",
       "project": "Skate Haven CIC",
       "color": "#c8a87a"
+    },
+    {
+      "date": "Mar 24",
+      "name": "Send bid writing outreach to Decathlon partners",
+      "project": "Bid Writing Outreach",
+      "color": "#a87ac8"
     }
   ],
   "agenda": [
@@ -79,6 +85,13 @@
       "next": "Decide on High Trees MEL Lead application (deadline 15 March)"
     },
     {
+      "name": "Bid Writing Outreach (Track 5)",
+      "group": "Jobseek",
+      "pct": 0,
+      "status": "pending",
+      "next": "Send bid writing outreach to Decathlon partners (not before 24 March)"
+    },
+    {
       "name": "Skate Haven Admin (CIC Operations)",
       "group": "Skate Haven Admin",
       "pct": 40,
@@ -98,7 +111,7 @@
       "id": 1,
       "title": "Launch Easter Camp Booking link",
       "project": "SKATE HAVEN",
-      "due": "today",
+      "due": "overdue",
       "priority": "high",
       "done": false
     },
