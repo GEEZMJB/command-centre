@@ -632,27 +632,28 @@
   ::-webkit-scrollbar-track { background: var(--surface); }
   ::-webkit-scrollbar-thumb { background: var(--border2); }
 
-  /* ── EVENT OVERLAY ── */
+  /* ── DAY DETAIL PANEL — fills the calendar panel area on day click ── */
   #event-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(12,12,14,0.85);
-    backdrop-filter: blur(4px);
+    background: rgba(12,12,14,0.18); /* subtle veil — rest of dashboard stays readable */
     z-index: 500;
-    align-items: center;
-    justify-content: center;
   }
-  #event-overlay.open { display: flex; }
+  #event-overlay.open { display: block; }
   .overlay-box {
-    background: var(--surface);
+    /* bounds set dynamically in JS to match .panel-calendar rect */
+    position: fixed;
+    background: rgba(13,13,16,0.82); /* semi-transparent — calendar grid shows faintly behind */
+    backdrop-filter: blur(1.5px);
+    -webkit-backdrop-filter: blur(1.5px);
     border: 1px solid var(--border2);
-    border-radius: 12px;
-    padding: 28px 32px;
-    width: 340px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
+    padding: 18px 20px;
+    z-index: 501;
   }
   .overlay-title {
     font-size: 11px;
@@ -1496,6 +1497,23 @@ function openOverlay(date) {
   // Always open to day view
   document.getElementById('overlay-day-view').style.display    = '';
   document.getElementById('overlay-create-form').style.display = 'none';
+
+  // Position the overlay-box to exactly cover the calendar panel
+  const positionOverlayBox = () => {
+    const panel = document.querySelector('.panel-calendar');
+    if (!panel) return;
+    const r   = panel.getBoundingClientRect();
+    const box = document.querySelector('.overlay-box');
+    box.style.top    = r.top  + 'px';
+    box.style.left   = r.left + 'px';
+    box.style.width  = r.width  + 'px';
+    box.style.height = r.height + 'px';
+  };
+  positionOverlayBox();
+  if (window._overlayResizeHandler) window.removeEventListener('resize', window._overlayResizeHandler);
+  window._overlayResizeHandler = positionOverlayBox;
+  window.addEventListener('resize', positionOverlayBox);
+
   document.getElementById('event-overlay').classList.add('open');
 }
 
@@ -1768,6 +1786,10 @@ function showCreateForm() {
 
 function closeOverlay() {
   document.getElementById('event-overlay').classList.remove('open');
+  if (window._overlayResizeHandler) {
+    window.removeEventListener('resize', window._overlayResizeHandler);
+    window._overlayResizeHandler = null;
+  }
 }
 
 // Close on backdrop click
