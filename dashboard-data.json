@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-16T20:40:17",
+  "lastSync": "2026-03-16T20:45:42",
   "events": [
     {
       "time": "00:00",
@@ -103,6 +103,24 @@
       "resolveBy": "2026-03-19",
       "resolved": false,
       "workflowColor": "#6a9cd8"
+    },
+    {
+      "id": "dep_006",
+      "title": "Get on top of SE budget status",
+      "parentTitle": "Sport England Check-in",
+      "parentType": "event",
+      "resolveBy": "2026-03-24",
+      "resolved": false,
+      "workflowColor": "#e07838"
+    },
+    {
+      "id": "dep_007",
+      "title": "Make progress in LRM",
+      "parentTitle": "Sport England Check-in",
+      "parentType": "event",
+      "resolveBy": "2026-03-24",
+      "resolved": false,
+      "workflowColor": "#e07838"
     }
   ],
   "workflows": [
