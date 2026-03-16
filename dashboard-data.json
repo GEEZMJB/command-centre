@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-16T21:46:10",
+  "lastSync": "2026-03-16T23:02:20",
   "events": [
     {
       "time": "00:00",
@@ -130,6 +130,13 @@
       "pct": 65,
       "status": "active",
       "next": "Draft cold outreach template for grant writing clients (Checkpoint 3.4)"
+    },
+    {
+      "name": "Grant Writing Outreach (Track 5)",
+      "group": "Grants",
+      "pct": 0,
+      "status": "active",
+      "next": "TBD"
     },
     {
       "name": "Assessor Pool Applications (Track 2)",
