@@ -854,7 +854,7 @@ document.getElementById('pwd-input').addEventListener('keydown', e => {
 });
 
 // ── LIVE DATA ──
-let data = { checkpoints: [], agenda: [], dependencies: [], workflows: [], tasks: [] };
+let data = { checkpoints: [], events: [], dependencies: [], workflows: [], tasks: [] };
 
 // ── Group colour palette ─────────────────────────────────────────────────────
 const GROUP_COLORS = {
@@ -995,8 +995,8 @@ function renderCalendar() {
       el.appendChild(cluster);
     }
 
-    // Dot for live agenda events
-    const agendaDay = (data.agenda || []).filter(ev => {
+    // Dot for live calendar events
+    const agendaDay = (data.events || []).filter(ev => {
       if (!ev._date) return false;
       const ed = new Date(ev._date);
       return ed.getFullYear() === cellDate.getFullYear() &&
@@ -1064,7 +1064,7 @@ function applyPersistedState() {
   const removed  = getRemovedEvents();
   const doneKeys = getDoneTaskKeys();
   const resolved = getResolvedDeps();
-  data.agenda = (data.agenda || []).filter(e => {
+  data.events = (data.events || data.agenda || []).filter(e => {
     const k = `${(e._date||'').slice(0,10)}|||${e.title}`;
     return !removed.has(k);
   });
@@ -1402,7 +1402,7 @@ function openOverlay(date) {
 
   // Populate events for this day
   const dateStr  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-  const dayEvts  = (data.agenda || []).filter(e => e._date && e._date.slice(0,10) === dateStr);
+  const dayEvts  = (data.events || []).filter(e => e._date && e._date.slice(0,10) === dateStr);
   const evList   = document.getElementById('overlay-events-list');
   // Surface dependencies for this day (by resolveBy date)
   const dayDepsResolved = getResolvedDeps();
@@ -1456,11 +1456,10 @@ async function removeEvent(dateStr, title) {
   removed.add(key);
   localStorage.setItem('removedEvents', JSON.stringify([...removed]));
 
-  // Remove from in-memory agenda
-  data.agenda = (data.agenda || []).filter(e =>
+  // Remove from in-memory events
+  data.events = (data.events || []).filter(e =>
     !(e._date && e._date.slice(0,10) === dateStr && e.title === title)
   );
-  renderAgenda();
   renderCalendar();
   openOverlay(overlayDate);
 
@@ -1566,9 +1565,9 @@ async function saveEvent() {
       }
     }
 
-    // Add to local agenda immediately for visual feedback
-    if (!data.agenda) data.agenda = [];
-    data.agenda.push({
+    // Add to local events immediately for visual feedback
+    if (!data.events) data.events = [];
+    data.events.push({
       time:     startStr,
       title:    title,
       meta:     '',
@@ -1576,7 +1575,6 @@ async function saveEvent() {
       calendar: appleCalName || '',
       _date:    `${yr}-${mo}-${day}T${startStr}:00`
     });
-    renderAgenda();
     renderCalendar();
 
     // Go back to day view after a beat
