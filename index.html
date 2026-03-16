@@ -298,20 +298,7 @@
     border-radius: 50%;
     background: var(--accent2);
   }
-  /* dependency ring — subtle circle enveloping the event dot at bottom of day cell */
-  .cal-dep-ring {
-    position: absolute;
-    bottom: 0px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    border: 1.5px solid;
-    background: transparent;
-    opacity: 0.5;
-    pointer-events: none;
-  }
+  /* dep halo + event pip are built entirely in JS via makePip / makeDepHalo */
 
   /* ── CALENDAR LEGEND ── */
   .cal-legend {
@@ -336,11 +323,10 @@
     flex-shrink: 0;
   }
   .legend-dot-dep {
-    width: 8px; height: 8px;
+    width: 10px; height: 10px;
     border-radius: 50%;
-    border: 1.5px solid var(--amber);
-    background: transparent;
-    opacity: 0.6;
+    background: var(--amber);
+    opacity: 0.38;
     flex-shrink: 0;
   }
 
@@ -894,6 +880,50 @@ function getDepColor(dep) {
   return dep.workflowColor || '#c8a87a';
 }
 
+// Map a calendar event to its display colour.
+function getEventCalColor(ev) {
+  if (ev.tag === 'skate')    return 'var(--skate-orange)';
+  if (ev.tag === 'personal') return 'var(--purple)';
+  if (ev.tag === 'deadline') return 'var(--amber)';
+  return 'var(--accent2)';
+}
+
+// Build a pill indicator for calendar cells.
+// colors: array of CSS colour strings (one per segment, max 4).
+// opts: { bottom, segSize } — bottom px offset from cell edge, segSize = width & height of one segment.
+function makePip(colors, opts) {
+  const seg = opts.segSize || 4;
+  const el  = document.createElement('div');
+  el.style.cssText =
+    `position:absolute;bottom:${opts.bottom}px;left:50%;transform:translateX(-50%);` +
+    `display:flex;width:${seg * colors.length}px;height:${seg}px;` +
+    `border-radius:${seg / 2}px;overflow:hidden;pointer-events:none;`;
+  colors.forEach(c => {
+    const s = document.createElement('div');
+    s.style.cssText = `flex:1;background:${c};`;
+    el.appendChild(s);
+  });
+  return el;
+}
+
+// Build a semi-transparent dep halo — same pill mechanic but softer.
+// Rendered behind the event pip so the event dot floats on top.
+function makeDepHalo(colors, opts) {
+  const seg = opts.segSize || 10;
+  const el  = document.createElement('div');
+  el.style.cssText =
+    `position:absolute;bottom:${opts.bottom}px;left:50%;transform:translateX(-50%);` +
+    `display:flex;width:${seg * colors.length}px;height:${seg}px;` +
+    `border-radius:${seg / 2}px;overflow:hidden;pointer-events:none;opacity:0.38;`;
+  if (opts.title) el.title = opts.title;
+  colors.forEach(c => {
+    const s = document.createElement('div');
+    s.style.cssText = `flex:1;background:${c};`;
+    el.appendChild(s);
+  });
+  return el;
+}
+
 async function loadDashboardData() {
   try {
     const resp = await fetch('dashboard-data.json?t=' + Date.now());
@@ -982,18 +1012,18 @@ function renderCalendar() {
     // Build date string for this cell
     const cellDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
     el.onclick = () => openOverlay(cellDate);
-    // Dependency ring — subtle circle enveloping the event dot area
+    // Dependency halo — semi-transparent filled pill, rendered behind event dots
     if (depMap[d]) {
       el.style.position = 'relative';
-      const ring = document.createElement('div');
-      ring.className = 'cal-dep-ring';
-      ring.style.borderColor = getDepColor(depMap[d][0]);
-      ring.title = depMap[d].map(dep => `${dep.title} · ${dep.parentTitle}`).join('\n');
-      el.appendChild(ring);
+      const deps   = depMap[d].slice(0, 4);
+      const colors = deps.map(dep => getDepColor(dep));
+      const title  = deps.map(dep => `${dep.title} · ${dep.parentTitle}`).join('\n');
+      el.appendChild(makeDepHalo(colors, { bottom: 0, segSize: 10, title }));
     }
 
-    // Dot for live calendar events
-    const agendaDay = (data.events || []).filter(ev => {
+    // Event pip — pill with up to 4 colour segments (one per event, capped at 4)
+    // Centred inside the dep halo (bottom: 3px aligns both centre-lines at 5px up)
+    const agendaDay = (data.events || data.agenda || []).filter(ev => {
       if (!ev._date) return false;
       const ed = new Date(ev._date);
       return ed.getFullYear() === cellDate.getFullYear() &&
@@ -1001,12 +1031,10 @@ function renderCalendar() {
              ed.getDate()     === cellDate.getDate();
     });
     if (agendaDay.length) {
-      const dot = document.createElement('span');
-      const hasSkate = agendaDay.some(e => e.tag === 'skate');
-      const dotColor = hasSkate ? 'var(--skate-orange)' : 'var(--accent2)';
-      dot.style.cssText = `position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:${dotColor};display:block;`;
       el.style.position = 'relative';
-      el.appendChild(dot);
+      const evs    = agendaDay.slice(0, 4);
+      const colors = evs.map(getEventCalColor);
+      el.appendChild(makePip(colors, { bottom: 3, segSize: 4 }));
     }
     grid.appendChild(el);
   }
