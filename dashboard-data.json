@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-16T14:23:09",
+  "lastSync": "2026-03-16T20:09:41",
   "events": [
     {
       "time": "00:00",
@@ -75,6 +75,15 @@
       "parentTitle": "Grant Writing Freelance",
       "parentType": "event",
       "resolveBy": "2026-03-22",
+      "resolved": false,
+      "workflowColor": "#6a9cd8"
+    },
+    {
+      "id": "dep_004",
+      "title": "Prepare codirector conversation",
+      "parentTitle": "Meet with Tom",
+      "parentType": "event",
+      "resolveBy": "2026-03-18",
       "resolved": false,
       "workflowColor": "#6a9cd8"
     }
