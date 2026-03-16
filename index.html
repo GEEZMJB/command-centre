@@ -946,6 +946,9 @@ async function init() {
   renderDependencies();
   renderWorkflows();
   renderTasks();
+  // Retry any GCal writes that failed in a previous session
+  // (token may not be ready yet — processRetryQueue checks internally)
+  setTimeout(() => processRetryQueue(), 3000);
 }
 
 function renderHeader() {
@@ -1165,12 +1168,17 @@ function renderDependencies() {
 function toggleDep(id) {
   const dep = (data.dependencies || []).find(d => d.id === id);
   const resolved = getResolvedDeps();
-  if (resolved.has(id) || (dep && dep.resolved)) {
+  const wasResolved = resolved.has(id) || (dep && dep.resolved);
+  if (wasResolved) {
     resolved.delete(id);
     if (dep) dep.resolved = false;
   } else {
     resolved.add(id);
     if (dep) dep.resolved = true;
+    // Action 4 — write audit note to parent GCal event (non-blocking)
+    if (dep && dep.parentType !== 'workflow') {
+      updateParentGcalEvent(dep).catch(() => {});
+    }
   }
   localStorage.setItem('resolvedDeps', JSON.stringify([...resolved]));
   renderDependencies();
@@ -1405,6 +1413,11 @@ function initGcalAuth() {
           document.getElementById('gcal-badge').textContent = '● connected to GCal';
           document.getElementById('gcal-badge').classList.add('authed');
         }
+        // Unblock any pending token-refresh awaits in gcalReq()
+        if (window._gcalTokenResolve) {
+          window._gcalTokenResolve(!!gcalToken);
+          delete window._gcalTokenResolve;
+        }
       }
     });
     // Request token silently on load (uses cached consent if available)
@@ -1459,11 +1472,17 @@ function openOverlay(date) {
           <div style="font-size:0.9rem;color:var(--text);font-weight:500;">${e.title}</div>
           <div style="font-size:0.75rem;color:var(--text3);">${e.calendar || ''}</div>
         </div>
-        <span class="agenda-tag tag-${e.tag}" style="margin-top:2px;">${e.tag}</span>
-        <button onclick="removeEvent('${dateStr}','${e.title.replace(/'/g,"\\'")}',this)" title="Remove from dashboard"
-          style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;line-height:1;margin-top:1px;flex-shrink:0;"
-          onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">✕</button>
+        <div style="display:flex;gap:4px;align-items:flex-start;flex-shrink:0;margin-top:1px;">
+          <span class="agenda-tag tag-${e.tag}">${e.tag}</span>
+          <button onclick="showEditForm('${dateStr}','${e.title.replace(/'/g,"\\'")}','${e.time}','${e.tag}')" title="Edit event"
+            style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;line-height:1;"
+            onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">✎</button>
+          <button onclick="showDeleteConfirm('${dateStr}','${e.title.replace(/'/g,"\\'")}',this)" title="Delete from GCal"
+            style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;line-height:1;"
+            onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">✕</button>
+        </div>
       </div>`).join('');
     evList.innerHTML = depHtml + evHtml;
   }
@@ -1474,27 +1493,248 @@ function openOverlay(date) {
   document.getElementById('event-overlay').classList.add('open');
 }
 
-async function removeEvent(dateStr, title) {
-  // Persist removal in localStorage (survives refresh)
-  const key     = `${dateStr}|||${title}`;
-  const removed = getRemovedEvents();
-  removed.add(key);
-  localStorage.setItem('removedEvents', JSON.stringify([...removed]));
+// ── GCAL BIDIRECTIONAL SYNC ──────────────────────────────────────────────────
 
-  // Remove from in-memory events
-  data.events = (data.events || []).filter(e =>
-    !(e._date && e._date.slice(0,10) === dateStr && e.title === title)
-  );
+// GCal event ID cache (localStorage) so we can PATCH/DELETE by ID
+function getGcalCache() {
+  try { return JSON.parse(localStorage.getItem('gcalCache') || '{}'); }
+  catch { return {}; }
+}
+function gcalCacheKey(dateStr, title) { return `${dateStr}|||${title}`; }
+function cacheGcalEvent(dateStr, title, calendarId, eventId) {
+  const c = getGcalCache();
+  c[gcalCacheKey(dateStr, title)] = { calendarId, eventId };
+  localStorage.setItem('gcalCache', JSON.stringify(c));
+}
+function lookupGcalEvent(dateStr, title) {
+  return getGcalCache()[gcalCacheKey(dateStr, title)] || null;
+}
+
+// Retry queue for failed GCal writes
+function getRetryQueue() {
+  try { return JSON.parse(localStorage.getItem('gcalRetryQueue') || '[]'); }
+  catch { return []; }
+}
+function queueRetry(op) {
+  const q = getRetryQueue();
+  q.push(op);
+  localStorage.setItem('gcalRetryQueue', JSON.stringify(q));
+}
+async function processRetryQueue() {
+  if (!gcalToken) return;
+  const q = getRetryQueue();
+  if (!q.length) return;
+  const remaining = [];
+  for (const op of q) {
+    try {
+      const ok = await executeQueuedOp(op);
+      if (!ok) remaining.push(op);
+    } catch { remaining.push(op); }
+  }
+  localStorage.setItem('gcalRetryQueue', JSON.stringify(remaining));
+}
+async function executeQueuedOp(op) {
+  if (op.type === 'delete') {
+    const r = await gcalReq('DELETE', op.calendarId, op.eventId);
+    return r.status === 204 || r.status === 200 || r.status === 404;
+  }
+  if (op.type === 'patch') {
+    const r = await gcalReq('PATCH', op.calendarId, op.eventId, op.body);
+    return r.ok;
+  }
+  if (op.type === 'create') {
+    const r = await gcalReq('POST', op.calendarId, null, op.body);
+    if (r.ok) { const ev = await r.json(); cacheGcalEvent(op.dateStr, op.body.summary, op.calendarId, ev.id); return true; }
+  }
+  return false;
+}
+
+// Core GCal fetch wrapper with automatic silent token refresh on 401
+async function gcalReq(method, calendarId, eventId, body) {
+  if (!gcalToken) throw new Error('auth_required');
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events` +
+    (eventId ? `/${eventId}` : '');
+  const makeOpts = () => ({
+    method,
+    headers: { 'Authorization': `Bearer ${gcalToken}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+  let resp = await fetch(url, makeOpts());
+  if (resp.status === 401) {
+    gcalToken = null;
+    document.getElementById('gcal-badge').textContent = '● reconnecting…';
+    document.getElementById('gcal-badge').classList.remove('authed');
+    if (window._gcalClient) {
+      await new Promise(resolve => {
+        window._gcalTokenResolve = resolve;
+        window._gcalClient.requestAccessToken({ prompt: '' });
+        setTimeout(() => { if (window._gcalTokenResolve) { window._gcalTokenResolve(false); delete window._gcalTokenResolve; } }, 5000);
+      });
+    }
+    if (!gcalToken) throw new Error('auth_required');
+    resp = await fetch(url, makeOpts());
+  }
+  return resp;
+}
+
+// Search GCal for an event by date + title (checks cache first, then API)
+async function findGcalEvent(dateStr, title) {
+  const cached = lookupGcalEvent(dateStr, title);
+  if (cached) return cached;
+  if (!gcalToken) return null;
+  const dayStart = `${dateStr}T00:00:00Z`;
+  const dayEnd   = `${dateStr}T23:59:59Z`;
+  for (const calId of [GCAL_CALENDAR, 'primary']) {
+    try {
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events` +
+        `?timeMin=${encodeURIComponent(dayStart)}&timeMax=${encodeURIComponent(dayEnd)}&singleEvents=true&maxResults=50`;
+      const r = await fetch(url, { headers: { 'Authorization': `Bearer ${gcalToken}` } });
+      if (!r.ok) continue;
+      const { items = [] } = await r.json();
+      const match = items.find(e => e.summary === title);
+      if (match) {
+        cacheGcalEvent(dateStr, title, calId, match.id);
+        return { calendarId: calId, eventId: match.id, event: match };
+      }
+    } catch {}
+  }
+  return null;
+}
+
+// Non-blocking error toast (auto-dismisses after 5s)
+let _toastTimer = null;
+function showSyncError(msg) {
+  let toast = document.getElementById('sync-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sync-toast';
+    toast.style.cssText =
+      'position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--red);' +
+      'color:var(--red);font-size:11px;letter-spacing:0.05em;padding:10px 16px;z-index:9999;' +
+      'max-width:280px;line-height:1.5;animation:fadeIn 0.2s ease;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 5000);
+}
+
+// ── EDIT MODE STATE ───────────────────────────────────────────────────────────
+let _editMode = false;
+let _editEventData = null; // { dateStr, title, time, tag }
+
+function addHourToTime(t) {
+  const [h, m] = t.split(':').map(Number);
+  return `${String((h + 1) % 24).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+// Open edit form pre-populated with event details (Action 2)
+function showEditForm(dateStr, title, time, tag) {
+  _editMode = true;
+  _editEventData = { dateStr, title, time, tag };
+  document.getElementById('ev-title').value  = title;
+  document.getElementById('ev-start').value  = time  || '09:00';
+  document.getElementById('ev-end').value    = addHourToTime(time || '09:00');
+  document.getElementById('ev-tag').value    = tag   || 'work';
+  document.getElementById('overlay-status').textContent = '';
+  document.getElementById('overlay-status').className   = 'overlay-status';
+  document.getElementById('overlay-save-btn').textContent = 'update event';
+  document.getElementById('overlay-day-view').style.display    = 'none';
+  document.getElementById('overlay-create-form').style.display = '';
+  setTimeout(() => document.getElementById('ev-title').focus(), 50);
+}
+
+// ── ACTION 3 — DELETE WITH CONFIRMATION ──────────────────────────────────────
+let _deleteConfirmKey = null;
+
+function showDeleteConfirm(dateStr, title, btn) {
+  const key = `${dateStr}|||${title}`;
+  if (_deleteConfirmKey === key) {
+    // Second click — execute
+    _deleteConfirmKey = null;
+    btn.disabled = true;
+    deleteEvent(dateStr, title);
+  } else {
+    // First click — arm confirmation
+    _deleteConfirmKey = key;
+    btn.textContent   = 'sure?';
+    btn.style.borderColor = 'var(--red)';
+    btn.style.color       = 'var(--red)';
+    setTimeout(() => {
+      if (_deleteConfirmKey === key) {
+        _deleteConfirmKey = null;
+        btn.textContent = '✕';
+        btn.style.borderColor = '';
+        btn.style.color       = '';
+      }
+    }, 3000);
+  }
+}
+
+async function deleteEvent(dateStr, title) {
+  // Optimistic local removal
+  const evStore = data.events || data.agenda || [];
+  const idx = evStore.findIndex(e => e.title === title && e._date && e._date.slice(0,10) === dateStr);
+  if (idx !== -1) evStore.splice(idx, 1);
+  const removed = getRemovedEvents();
+  removed.add(`${dateStr}|||${title}`);
+  localStorage.setItem('removedEvents', JSON.stringify([...removed]));
   renderCalendar();
   openOverlay(overlayDate);
 
-  // Also delete from Apple Calendar → iCloud → all devices
+  // GCal DELETE
   try {
-    await calServerDelete('/events', { title, date: dateStr });
-    console.log(`Deleted "${title}" from Apple Calendar`);
-  } catch (err) {
-    console.warn('Apple Calendar delete skipped (bridge offline):', err.message);
+    if (!gcalToken) throw new Error('auth_required');
+    const found = await findGcalEvent(dateStr, title);
+    if (!found) {
+      showSyncError('Sync failed — event removed locally. Not found in GCal.');
+      return;
+    }
+    const resp = await gcalReq('DELETE', found.calendarId, found.eventId);
+    if (!resp.ok && resp.status !== 404) throw new Error(`HTTP ${resp.status}`);
+    // Remove from cache
+    const c = getGcalCache();
+    delete c[gcalCacheKey(dateStr, title)];
+    localStorage.setItem('gcalCache', JSON.stringify(c));
+  } catch (e) {
+    if (e.message === 'auth_required') {
+      showSyncError('Sync failed — not connected to GCal. Event removed locally only.');
+    } else {
+      queueRetry({ type: 'delete', calendarId: GCAL_CALENDAR, eventId: null, dateStr, title });
+      showSyncError('Sync failed — changes saved locally. Will retry on next load.');
+    }
   }
+
+  // Also remove from Apple Calendar bridge
+  try { await calServerDelete('/events', { title, date: dateStr }); } catch {}
+}
+
+// ── ACTION 4 — DEP RESOLVED → PATCH PARENT GCAL EVENT ────────────────────────
+async function updateParentGcalEvent(dep) {
+  if (!gcalToken || !dep.parentTitle || dep.parentType === 'workflow') return;
+  try {
+    const past   = new Date(Date.now() - 30  * 86400000).toISOString();
+    const future = new Date(Date.now() + 180 * 86400000).toISOString();
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GCAL_CALENDAR)}/events` +
+      `?timeMin=${encodeURIComponent(past)}&timeMax=${encodeURIComponent(future)}&singleEvents=true&maxResults=200`;
+    const r = await fetch(url, { headers: { 'Authorization': `Bearer ${gcalToken}` } });
+    if (!r.ok) return;
+    const { items = [] } = await r.json();
+    const parentEv = items.find(e => e.summary === dep.parentTitle);
+    if (!parentEv) return;
+    const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const note  = `[Dependency resolved: ${dep.title} — ${today}]`;
+    const desc  = parentEv.description ? `${parentEv.description}\n${note}` : note;
+    await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GCAL_CALENDAR)}/events/${parentEv.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${gcalToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: desc })
+      }
+    );
+  } catch (e) { console.warn('updateParentGcalEvent:', e.message); }
 }
 
 function showDayView() {
@@ -1503,16 +1743,18 @@ function showDayView() {
 }
 
 function showCreateForm() {
+  _editMode = false;
+  _editEventData = null;
   document.getElementById('ev-title').value  = '';
   document.getElementById('ev-start').value  = '09:00';
   document.getElementById('ev-end').value    = '10:00';
   document.getElementById('ev-tag').value    = 'work';
   document.getElementById('overlay-status').textContent = '';
   document.getElementById('overlay-status').className   = 'overlay-status';
+  document.getElementById('overlay-save-btn').textContent = 'save to GCal';
   document.getElementById('overlay-day-view').style.display    = 'none';
   document.getElementById('overlay-create-form').style.display = '';
   setTimeout(() => document.getElementById('ev-title').focus(), 50);
-  // Request GCal token silently if not yet authed
   if (!gcalToken && window._gcalClient) {
     window._gcalClient.requestAccessToken({ prompt: '' });
   }
@@ -1542,72 +1784,100 @@ async function saveEvent() {
     return;
   }
 
+  const calId = tag === 'personal' ? 'primary' : GCAL_CALENDAR;
+
+  // ── ACTION 2 — UPDATE existing event ────────────────────────────────────────
+  if (_editMode && _editEventData) {
+    const { dateStr, title: oldTitle } = _editEventData;
+    const [yr, mo, dy] = dateStr.split('-');
+    status.textContent = 'updating…'; status.className = 'overlay-status';
+    try {
+      let found = await findGcalEvent(dateStr, oldTitle);
+      if (!found) {
+        status.textContent = 'event not found in GCal — cannot update';
+        status.className   = 'overlay-status err';
+        return;
+      }
+      const body = {
+        summary: title,
+        start:   { dateTime: `${dateStr}T${startStr}:00`, timeZone: 'Europe/London' },
+        end:     { dateTime: `${dateStr}T${endStr}:00`,   timeZone: 'Europe/London' }
+      };
+      const resp = await gcalReq('PATCH', found.calendarId, found.eventId, body);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      // Update cache key if title changed
+      if (title !== oldTitle) {
+        const c = getGcalCache();
+        delete c[gcalCacheKey(dateStr, oldTitle)];
+        c[gcalCacheKey(dateStr, title)] = { calendarId: found.calendarId, eventId: found.eventId };
+        localStorage.setItem('gcalCache', JSON.stringify(c));
+      }
+      // Update local data
+      const evStore = data.events || data.agenda || [];
+      const idx = evStore.findIndex(e => e.title === oldTitle && e._date && e._date.slice(0,10) === dateStr);
+      if (idx !== -1) { evStore[idx].title = title; evStore[idx].time = startStr; evStore[idx].tag = tag; }
+      status.textContent = '✓ updated in GCal'; status.className = 'overlay-status ok';
+      renderCalendar();
+      setTimeout(() => openOverlay(overlayDate), 1200);
+    } catch (e) {
+      status.textContent = 'update failed — ' + e.message;
+      status.className   = 'overlay-status err';
+      if (e.message === 'auth_required') showSyncError('Sync failed — not connected to GCal.');
+      else { queueRetry({ type: 'patch', calendarId: calId, eventId: null, body: { summary: title } }); showSyncError('Sync failed — changes saved locally.'); }
+    }
+    return;
+  }
+
+  // ── ACTION 1 — CREATE new event ──────────────────────────────────────────────
   const yr  = overlayDate.getFullYear();
   const mo  = String(overlayDate.getMonth() + 1).padStart(2, '0');
   const day = String(overlayDate.getDate()).padStart(2, '0');
+  const dateStr = `${yr}-${mo}-${day}`;
 
-  const event = {
+  const eventBody = {
     summary: title,
-    start:   { dateTime: `${yr}-${mo}-${day}T${startStr}:00`, timeZone: 'Europe/London' },
-    end:     { dateTime: `${yr}-${mo}-${day}T${endStr}:00`,   timeZone: 'Europe/London' },
+    start:   { dateTime: `${dateStr}T${startStr}:00`, timeZone: 'Europe/London' },
+    end:     { dateTime: `${dateStr}T${endStr}:00`,   timeZone: 'Europe/London' },
     colorId: tag === 'deadline' ? '11' : tag === 'personal' ? '7' : '1'
   };
 
-  status.textContent = 'saving…';
-  status.className   = 'overlay-status';
+  status.textContent = 'saving…'; status.className = 'overlay-status';
 
   try {
-    const resp = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GCAL_CALENDAR)}/events`,
-      {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${gcalToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(event)
-      }
-    );
+    const resp = await gcalReq('POST', calId, null, eventBody);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const created = await resp.json();
 
-    status.textContent = '✓ saved to Google Calendar';
-    status.className   = 'overlay-status ok';
+    // Cache the GCal event ID so edit/delete can find it instantly
+    cacheGcalEvent(dateStr, title, calId, created.id);
 
-    // Also write to Apple Calendar (→ iCloud → all devices) for skate/personal tags
+    status.textContent = '✓ saved to GCal'; status.className = 'overlay-status ok';
+
+    // Apple Calendar bridge for personal/skate tags
     const calMap = { skate: 'Skate Haven Calendar', personal: 'Home' };
     const appleCalName = calMap[tag];
     if (appleCalName) {
       try {
-        await calServerPost('/events', {
-          title,
-          start: `${yr}-${mo}-${day}T${startStr}:00`,
-          end:   `${yr}-${mo}-${day}T${endStr}:00`,
-          calendar: appleCalName,
-          tag
-        });
+        await calServerPost('/events', { title, start: `${dateStr}T${startStr}:00`, end: `${dateStr}T${endStr}:00`, calendar: appleCalName, tag });
         status.textContent = `✓ saved to GCal + ${appleCalName}`;
-      } catch (calErr) {
-        status.textContent = '✓ saved to GCal (Apple Calendar bridge offline)';
-        console.warn('Calendar bridge:', calErr.message);
-      }
+      } catch { status.textContent = '✓ saved to GCal (Apple bridge offline)'; }
     }
 
-    // Add to local events immediately for visual feedback
+    // Add to local events immediately
     if (!data.events) data.events = [];
-    data.events.push({
-      time:     startStr,
-      title:    title,
-      meta:     '',
-      tag:      tag,
-      calendar: appleCalName || '',
-      _date:    `${yr}-${mo}-${day}T${startStr}:00`
-    });
+    data.events.push({ time: startStr, title, meta: '', tag, calendar: appleCalName || '', _date: `${dateStr}T${startStr}:00`, _gcalId: created.id });
     renderCalendar();
-
-    // Go back to day view after a beat
     setTimeout(() => openOverlay(overlayDate), 1200);
-  } catch(e) {
+  } catch (e) {
     status.textContent = 'failed: ' + e.message;
     status.className   = 'overlay-status err';
-    if (e.message.includes('401')) { gcalToken = null; }
+    if (e.message === 'auth_required') {
+      gcalToken = null;
+      document.getElementById('gcal-badge').textContent = '● not connected to GCal';
+      document.getElementById('gcal-badge').classList.remove('authed');
+    }
+    queueRetry({ type: 'create', calendarId: calId, dateStr, body: eventBody });
+    showSyncError('Sync failed — changes saved locally. Will retry on next load.');
   }
 }
 
@@ -1661,7 +1931,7 @@ function updateSyncTime() {
       <div class="overlay-status" id="overlay-status"></div>
       <div class="overlay-actions">
         <button class="overlay-btn cancel" onclick="closeOverlay()">cancel</button>
-        <button class="overlay-btn primary" onclick="saveEvent()">save to GCal</button>
+        <button class="overlay-btn primary" id="overlay-save-btn" onclick="saveEvent()">save to GCal</button>
       </div>
       <div id="gcal-badge">● not connected to GCal</div>
     </div>
