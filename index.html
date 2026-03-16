@@ -209,7 +209,7 @@
   }
 
   .panel-calendar::before { background: linear-gradient(90deg, var(--accent), transparent); }
-  .panel-agenda::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .panel-deps::before { background: linear-gradient(90deg, var(--accent2), transparent); }
   .panel-workflows::before { background: linear-gradient(90deg, var(--purple), transparent); }
   .panel-tasks::before { background: linear-gradient(90deg, var(--green), transparent); }
 
@@ -298,8 +298,8 @@
     border-radius: 50%;
     background: var(--accent2);
   }
-  /* checkpoint diamond cluster — centred, clearly distinct from event dots */
-  .cal-cp-dots {
+  /* dependency diamond cluster — centred, clearly distinct from event dots */
+  .cal-dep-dots {
     position: absolute;
     top: 4px;
     left: 0; right: 0;
@@ -309,91 +309,117 @@
     gap: 4px;
     pointer-events: none;
   }
-  .cal-cp-dot {
+  .cal-dep-dot {
     width: 6px;
     height: 6px;
     transform: rotate(45deg);
     flex-shrink: 0;
     border-radius: 1px;
+    background: transparent;
+    border: 1.5px solid;
   }
 
-  /* ── CHECKPOINTS in calendar ── */
-  .checkpoints {
-    margin-top: 14px;
+  /* ── CALENDAR LEGEND ── */
+  .cal-legend {
+    margin-top: 12px;
+    padding-top: 10px;
     border-top: 1px solid var(--border);
-    padding-top: 12px;
+    display: flex;
+    gap: 16px;
   }
-
-  .checkpoint-item {
+  .cal-legend-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .checkpoint-item:last-child { border-bottom: none; }
-
-  .checkpoint-date {
+    gap: 6px;
     font-size: 10px;
     color: var(--text3);
-    min-width: 36px;
+    letter-spacing: 0.06em;
   }
-
-  .checkpoint-bar {
-    width: 3px;
-    height: 28px;
+  .legend-dot-event {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    flex-shrink: 0;
+  }
+  .legend-dot-dep {
+    width: 6px; height: 6px;
+    border-radius: 1px;
+    transform: rotate(45deg);
+    border: 1.5px solid var(--amber);
+    background: transparent;
     flex-shrink: 0;
   }
 
-  .checkpoint-info { flex: 1; }
+  /* ── DEPENDENCIES PANEL ── */
+  .panel-deps { grid-column: 2 / 3; grid-row: 1 / 2; }
 
-  .checkpoint-name {
-    font-size: 11px;
-    color: var(--text);
-    line-height: 1.3;
-  }
-
-  .checkpoint-project {
-    font-size: 10px;
-    color: var(--text3);
-  }
-
-  /* ── AGENDA PANEL ── */
-  .panel-agenda { grid-column: 2 / 3; grid-row: 1 / 2; }
-
-  .agenda-item {
+  .dep-item {
     display: flex;
-    gap: 12px;
-    padding: 8px 0;
+    gap: 10px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border);
     align-items: flex-start;
+    border-left: 2px solid transparent;
+    transition: background 0.15s;
   }
 
-  .agenda-item:last-child { border-bottom: none; }
+  .dep-item:last-child { border-bottom: none; }
+  .dep-item:hover { background: var(--surface2); }
+  .dep-item.resolved { opacity: 0.45; }
 
-  .agenda-time {
-    font-size: 10px;
-    color: var(--text3);
-    min-width: 42px;
-    padding-top: 2px;
-    letter-spacing: 0.05em;
+  .dep-check {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border2);
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
   }
 
-  .agenda-body { flex: 1; }
+  .dep-check:hover { border-color: var(--green); }
 
-  .agenda-title {
+  .dep-item.resolved .dep-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .dep-item.resolved .dep-check::after {
+    content: '✓';
+    font-size: 9px;
+    color: var(--bg);
+  }
+
+  .dep-body { flex: 1; min-width: 0; }
+
+  .dep-title {
     font-size: 12px;
     color: var(--text);
     line-height: 1.3;
   }
 
-  .agenda-meta {
-    font-size: 10px;
-    color: var(--text3);
-    margin-top: 2px;
+  .dep-item.resolved .dep-title { text-decoration: line-through; color: var(--text3); }
+
+  .dep-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 3px;
   }
 
+  .dep-parent {
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  .dep-date {
+    font-size: 10px;
+    color: var(--amber);
+  }
+
+  /* keep agenda tag styles for calendar overlay */
   .agenda-tag {
     display: inline-block;
     padding: 1px 6px;
@@ -605,6 +631,11 @@
   .task-item.pri-high-item { border-left-color: var(--red); }
   .task-item.pri-med-item { border-left-color: var(--amber); }
 
+  .task-item[draggable="true"] { cursor: grab; }
+  .task-item[draggable="true"]:active { cursor: grabbing; }
+  .task-item.dragging { opacity: 0.35; }
+  .task-item.drag-over { border-top: 2px solid var(--accent) !important; }
+
   /* ── DIVIDER LABEL ── */
   .section-divider {
     font-size: 9px;
@@ -759,16 +790,16 @@
       </div>
       <div class="cal-grid" id="cal-grid"></div>
 
-      <div class="checkpoints">
-        <div class="panel-label" style="margin-bottom:10px;">Checkpoints</div>
-        <div id="checkpoints-list"></div>
+      <div class="cal-legend">
+        <span class="cal-legend-item"><span class="legend-dot-event"></span>Events</span>
+        <span class="cal-legend-item"><span class="legend-dot-dep"></span>Dependencies</span>
       </div>
     </div>
 
-    <!-- TODAY'S AGENDA -->
-    <div class="panel panel-agenda">
-      <div class="panel-label">Today's Agenda</div>
-      <div id="agenda-list"></div>
+    <!-- DEPENDENCIES -->
+    <div class="panel panel-deps">
+      <div class="panel-label">Dependencies</div>
+      <div id="deps-list"></div>
     </div>
 
     <!-- WORKFLOWS -->
@@ -780,11 +811,11 @@
     <!-- PENDING TASKS -->
     <div class="panel panel-tasks">
       <div class="panel-label">Pending Tasks</div>
-      <div class="tasks-filters">
+      <div class="tasks-filters" id="tasks-filters">
         <button class="filter-btn active" onclick="filterTasks('all', this)">All</button>
-        <button class="filter-btn" onclick="filterTasks('today', this)">Today</button>
-        <button class="filter-btn" onclick="filterTasks('high', this)">High Priority</button>
-        <button class="filter-btn" onclick="filterTasks('pending', this)">Pending</button>
+        <button class="filter-btn" onclick="filterTasks('Jobseek', this)">Jobseek</button>
+        <button class="filter-btn" onclick="filterTasks('Skate Haven Admin', this)">Skate Haven</button>
+        <button class="filter-btn" onclick="filterTasks('Dashboard Setup', this)">Dashboard</button>
       </div>
       <div class="tasks-list" id="tasks-list"></div>
     </div>
@@ -823,7 +854,7 @@ document.getElementById('pwd-input').addEventListener('keydown', e => {
 });
 
 // ── LIVE DATA ──
-let data = { checkpoints: [], agenda: [], workflows: [], tasks: [] };
+let data = { checkpoints: [], agenda: [], dependencies: [], workflows: [], tasks: [] };
 
 // ── Group colour palette ─────────────────────────────────────────────────────
 const GROUP_COLORS = {
@@ -880,8 +911,7 @@ async function init() {
   initGcalAuth();
   renderHeader();
   renderCalendar();
-  renderCheckpoints();
-  renderAgenda();
+  renderDependencies();
   renderWorkflows();
   renderTasks();
 }
@@ -913,19 +943,17 @@ function renderCalendar() {
   const last = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0);
   const today = new Date();
 
-  // Build checkpoint map for displayed month: day → [{name, project, groupColor}]
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dismissedCPs = getDismissedCPs();
-  const cpMap = {};
-  (data.checkpoints || []).forEach(cp => {
-    if (dismissedCPs.has(`${cp.date}|${cp.name}`)) return;
-    const monthIdx = monthNames.findIndex(m => cp.date.includes(m));
-    const dayMatch = cp.date.match(/\d+/);
-    if (monthIdx === calDate.getMonth() && dayMatch) {
-      const day = parseInt(dayMatch[0]);
-      if (!cpMap[day]) cpMap[day] = [];
-      const gs = getGroupStyle(cp.project);
-      cpMap[day].push({ name: cp.name, project: cp.project, groupColor: gs ? gs.color : '#5bb8c8' });
+  // Build dependency map for displayed month: day → [{id, title, parentTitle, workflowColor}]
+  const resolvedDeps = getResolvedDeps();
+  const depMap = {};
+  (data.dependencies || []).forEach(dep => {
+    if (dep.resolved || resolvedDeps.has(dep.id)) return;
+    if (!dep.resolveBy) return;
+    const depDate = new Date(dep.resolveBy + 'T00:00:00');
+    if (depDate.getFullYear() === calDate.getFullYear() && depDate.getMonth() === calDate.getMonth()) {
+      const day = depDate.getDate();
+      if (!depMap[day]) depMap[day] = [];
+      depMap[day].push({ id: dep.id, title: dep.title, parentTitle: dep.parentTitle, workflowColor: dep.workflowColor || '#c8a87a' });
     }
   });
 
@@ -945,23 +973,23 @@ function renderCalendar() {
     const el = document.createElement('div');
     let cls = 'cal-day';
     if (d === today.getDate() && calDate.getMonth() === today.getMonth() && calDate.getFullYear() === today.getFullYear()) cls += ' today';
-    // position:relative needed for checkpoint bar + event dot
-    if (cpMap[d]) cls += ' has-checkpoint';
+    // position:relative needed for dependency diamond + event dot
+    if (depMap[d]) cls += ' has-dep';
     el.className = cls;
     el.textContent = d;
     // Build date string for this cell
     const cellDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
     el.onclick = () => openOverlay(cellDate);
-    // Checkpoint dot cluster — one coloured dot per checkpoint, centred at top
-    if (cpMap[d]) {
+    // Dependency diamond cluster — one hollow diamond per dep, centred at top
+    if (depMap[d]) {
       el.style.position = 'relative';
       const cluster = document.createElement('div');
-      cluster.className = 'cal-cp-dots';
-      cpMap[d].forEach(cp => {
+      cluster.className = 'cal-dep-dots';
+      depMap[d].forEach(dep => {
         const dot = document.createElement('div');
-        dot.className = 'cal-cp-dot';
-        dot.style.background = cp.groupColor;
-        dot.title = `${cp.name} · ${cp.project}`;
+        dot.className = 'cal-dep-dot';
+        dot.style.borderColor = dep.workflowColor;
+        dot.title = `${dep.title} · ${dep.parentTitle}`;
         cluster.appendChild(dot);
       });
       el.appendChild(cluster);
@@ -1004,10 +1032,6 @@ function changeMonth(dir) {
 
 // ── Persistence helpers (localStorage) ──────────────────────────────────────
 
-function getDismissedCPs() {
-  try { return new Set(JSON.parse(localStorage.getItem('dismissedCheckpoints') || '[]')); }
-  catch { return new Set(); }
-}
 
 function getRemovedEvents() {
   try { return new Set(JSON.parse(localStorage.getItem('removedEvents') || '[]')); }
@@ -1019,12 +1043,27 @@ function getDoneTaskKeys() {
   catch { return new Set(); }
 }
 
+function getResolvedDeps() {
+  try { return new Set(JSON.parse(localStorage.getItem('resolvedDeps') || '[]')); }
+  catch { return new Set(); }
+}
+
+function getTaskOrder() {
+  try { return JSON.parse(localStorage.getItem('taskOrder') || 'null'); }
+  catch { return null; }
+}
+
+function setTaskOrder(ids) {
+  localStorage.setItem('taskOrder', JSON.stringify(ids));
+}
+
 function taskKey(t) { return `${t.title}|||${t.project}`; }
 
 // Apply persisted state onto freshly-loaded data
 function applyPersistedState() {
   const removed  = getRemovedEvents();
   const doneKeys = getDoneTaskKeys();
+  const resolved = getResolvedDeps();
   data.agenda = (data.agenda || []).filter(e => {
     const k = `${(e._date||'').slice(0,10)}|||${e.title}`;
     return !removed.has(k);
@@ -1032,67 +1071,85 @@ function applyPersistedState() {
   (data.tasks || []).forEach(t => {
     if (doneKeys.has(taskKey(t))) t.done = true;
   });
+  // Apply resolved state to dependencies
+  (data.dependencies || []).forEach(d => {
+    if (resolved.has(d.id)) d.resolved = true;
+  });
+  // Apply custom task order from localStorage
+  const order = getTaskOrder();
+  if (order && order.length) {
+    const taskMap = {};
+    (data.tasks || []).forEach(t => { taskMap[t.id] = t; });
+    const reordered = order.map(id => taskMap[id]).filter(Boolean);
+    const rest = (data.tasks || []).filter(t => !order.includes(t.id));
+    data.tasks = [...reordered, ...rest];
+  }
 }
 
-function dismissCheckpoint(key) {
-  const dismissed = getDismissedCPs();
-  dismissed.add(key);
-  localStorage.setItem('dismissedCheckpoints', JSON.stringify([...dismissed]));
-  renderCheckpoints();
-  renderCalendar();
+function formatDepDate(dateStr) {
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const delta = Math.round((d - today) / 86400000);
+    if (delta < 0) return 'overdue';
+    if (delta === 0) return 'today';
+    if (delta === 1) return 'tomorrow';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  } catch { return dateStr; }
 }
 
-function renderCheckpoints() {
-  const dismissed = getDismissedCPs();
-  const list = document.getElementById('checkpoints-list');
-  const active = (data.checkpoints || []).filter(cp => !dismissed.has(`${cp.date}|${cp.name}`));
-  if (active.length === 0) {
-    list.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">All checkpoints cleared ✓</div>';
+function renderDependencies() {
+  const list = document.getElementById('deps-list');
+  if (!list) return;
+  const resolved = getResolvedDeps();
+  const deps = (data.dependencies || []);
+  const unresolved = deps
+    .filter(d => !d.resolved && !resolved.has(d.id))
+    .sort((a, b) => (a.resolveBy || '').localeCompare(b.resolveBy || ''));
+  const resolvedList = deps.filter(d => d.resolved || resolved.has(d.id));
+
+  if (unresolved.length === 0 && resolvedList.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);padding:14px 0;font-size:0.85rem;text-align:center;">No dependencies</div>';
     return;
   }
-  list.innerHTML = active.map(cp => {
-    const key = `${cp.date}|${cp.name}`.replace(/'/g, "\\'");
-    const gs  = getGroupStyle(cp.project);
-    const wrapStyle = gs
-      ? `align-items:center;gap:8px;border-left:2px solid ${gs.border};background:${gs.bg};padding:5px 8px;border-radius:0 4px 4px 0;margin-bottom:4px;`
-      : 'align-items:center;gap:8px;';
-    const barColor = gs ? gs.color : cp.color;
+
+  const renderDep = (dep, isResolved) => {
+    const color = dep.workflowColor || 'var(--accent2)';
+    const dateLabel = dep.resolveBy ? formatDepDate(dep.resolveBy) : '—';
+    const dateStyle = dateLabel === 'overdue' ? 'color:var(--red)' :
+                      dateLabel === 'today'   ? 'color:var(--amber)' : 'color:var(--text3)';
     return `
-    <div class="checkpoint-item" style="${wrapStyle}">
-      <button onclick="dismissCheckpoint('${key}')" title="Mark complete"
-        style="width:15px;height:15px;min-width:15px;border:1px solid var(--border);border-radius:3px;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:transparent;font-size:9px;flex-shrink:0;transition:all .15s;"
-        onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='transparent'">✓</button>
-      <div class="checkpoint-date">${cp.date}</div>
-      <div class="checkpoint-bar" style="background:${barColor}"></div>
-      <div class="checkpoint-info">
-        <div class="checkpoint-name">${cp.name}</div>
-        <div class="checkpoint-project" style="${gs ? `color:${gs.color};` : ''}">${cp.project}</div>
-      </div>
-    </div>`;
-  }).join('');
+      <div class="dep-item${isResolved ? ' resolved' : ''}" style="border-left-color:${color}">
+        <div class="dep-check" onclick="toggleDep('${dep.id}')"></div>
+        <div class="dep-body">
+          <div class="dep-title">${dep.title}</div>
+          <div class="dep-meta">
+            <span class="dep-parent">→ ${dep.parentTitle || '—'}</span>
+            <span class="dep-date" style="${dateStyle}">${dateLabel}</span>
+          </div>
+        </div>
+      </div>`;
+  };
+
+  list.innerHTML = unresolved.map(d => renderDep(d, false)).join('') +
+    (resolvedList.length
+      ? `<div class="section-divider">Resolved</div>` + resolvedList.map(d => renderDep(d, true)).join('')
+      : '');
 }
 
-function renderAgenda() {
-  const list = document.getElementById('agenda-list');
-  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const todayEvents = (data.agenda || []).filter(item =>
-    item._date && item._date.slice(0, 10) === todayStr
-  );
-  if (todayEvents.length === 0) {
-    list.innerHTML = '<div style="color:var(--text3);padding:14px 0;font-size:0.85rem;text-align:center;">Nothing scheduled today</div>';
-    return;
+function toggleDep(id) {
+  const dep = (data.dependencies || []).find(d => d.id === id);
+  const resolved = getResolvedDeps();
+  if (resolved.has(id) || (dep && dep.resolved)) {
+    resolved.delete(id);
+    if (dep) dep.resolved = false;
+  } else {
+    resolved.add(id);
+    if (dep) dep.resolved = true;
   }
-  list.innerHTML = todayEvents.map(item => `
-    <div class="agenda-item">
-      <div class="agenda-time">${item.time}</div>
-      <div class="agenda-body">
-        <div class="agenda-title">${item.title}</div>
-        <div class="agenda-meta">${[item.meta, item.calendar].filter(Boolean).join(' · ')}</div>
-        <span class="agenda-tag tag-${item.tag}">${item.tag}</span>
-      </div>
-    </div>
-  `).join('');
+  localStorage.setItem('resolvedDeps', JSON.stringify([...resolved]));
+  renderDependencies();
+  renderCalendar();
 }
 
 function renderWorkflows() {
@@ -1136,29 +1193,44 @@ function renderWorkflows() {
   }).join('');
 }
 
+const PRIORITY_ORDER = { high: 0, med: 1, low: 2 };
+
 function renderTasks() {
   const list = document.getElementById('tasks-list');
-  let filtered = data.tasks;
+  let tasks = [...(data.tasks || [])];
 
-  if (currentFilter === 'today') filtered = data.tasks.filter(t => t.due === 'today' || t.due === 'overdue');
-  if (currentFilter === 'high') filtered = data.tasks.filter(t => t.priority === 'high');
-  if (currentFilter === 'pending') filtered = data.tasks.filter(t => !t.done);
+  // Filter by workflow group
+  if (currentFilter !== 'all') {
+    tasks = tasks.filter(t => {
+      const gs = getGroupStyle(t.project);
+      return gs && gs.group === currentFilter;
+    });
+  }
 
-  const pending = filtered.filter(t => !t.done);
-  const done = filtered.filter(t => t.done);
+  let pending = tasks.filter(t => !t.done);
+  const done = tasks.filter(t => t.done);
+
+  // Sort by priority only if no custom order has been set
+  const order = getTaskOrder();
+  if (!order) {
+    pending.sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1));
+  }
 
   const renderItem = t => {
     const gs = getGroupStyle(t.project);
     const bgStyle = gs && !t.done ? `background:${gs.bg};` : '';
-    const projStyle = gs ? `color:${gs.color};` : '';
+    const borderColor = gs && !t.done ? gs.color : 'transparent';
     return `
-    <div class="task-item ${t.done ? 'done' : ''} pri-${t.priority}-item" style="${bgStyle}" onclick="toggleTask(${t.id})">
+    <div class="task-item ${t.done ? 'done' : ''}"
+         style="${bgStyle}border-left:2px solid ${borderColor};"
+         data-id="${t.id}"
+         draggable="${!t.done}"
+         onclick="toggleTask(${t.id})">
       <div class="task-check"></div>
       <div class="task-body">
         <div class="task-title">${t.title}</div>
         <div class="task-meta">
-          <span class="task-project" style="${projStyle}">${t.project}</span>
-          <span class="task-due due-${t.due === 'overdue' ? 'overdue' : t.due === 'today' ? 'today' : 'upcoming'}">${t.due}</span>
+          <span class="task-project" style="${gs ? `color:${gs.color};` : ''}">${t.project}</span>
         </div>
       </div>
       <div class="priority-dot pri-${t.priority}"></div>
@@ -1167,13 +1239,14 @@ function renderTasks() {
 
   list.innerHTML = pending.map(renderItem).join('') +
     (done.length ? `<div class="section-divider">Completed</div>` + done.map(renderItem).join('') : '');
+
+  initTaskDrag();
 }
 
 function toggleTask(id) {
   const task = data.tasks.find(t => t.id === id);
   if (!task) return;
   task.done = !task.done;
-  // Persist done state
   const doneKeys = getDoneTaskKeys();
   if (task.done) doneKeys.add(taskKey(task));
   else           doneKeys.delete(taskKey(task));
@@ -1186,6 +1259,59 @@ function filterTasks(filter, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderTasks();
+}
+
+// ── DRAG TO REORDER ──────────────────────────────────────────────────────────
+let dragSrcId = null;
+
+function initTaskDrag() {
+  document.querySelectorAll('.task-item[draggable="true"]').forEach(item => {
+    item.addEventListener('dragstart', onDragStart);
+    item.addEventListener('dragover',  onDragOver);
+    item.addEventListener('dragleave', onDragLeave);
+    item.addEventListener('drop',      onDrop);
+    item.addEventListener('dragend',   onDragEnd);
+  });
+}
+
+function onDragStart(e) {
+  dragSrcId = parseInt(this.dataset.id);
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  // prevent onclick firing after drag
+  this.addEventListener('click', e => e.stopPropagation(), { once: true });
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over'));
+  this.classList.add('drag-over');
+}
+
+function onDragLeave() {
+  this.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.stopPropagation();
+  const targetId = parseInt(this.dataset.id);
+  if (!dragSrcId || dragSrcId === targetId) return;
+  const tasks = data.tasks;
+  const srcIdx = tasks.findIndex(t => t.id === dragSrcId);
+  const tgtIdx = tasks.findIndex(t => t.id === targetId);
+  if (srcIdx === -1 || tgtIdx === -1) return;
+  const [moved] = tasks.splice(srcIdx, 1);
+  tasks.splice(tgtIdx, 0, moved);
+  setTaskOrder(tasks.map(t => t.id));
+  renderTasks();
+}
+
+function onDragEnd() {
+  dragSrcId = null;
+  document.querySelectorAll('.task-item').forEach(el => {
+    el.classList.remove('dragging', 'drag-over');
+  });
 }
 
 
@@ -1278,29 +1404,27 @@ function openOverlay(date) {
   const dateStr  = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
   const dayEvts  = (data.agenda || []).filter(e => e._date && e._date.slice(0,10) === dateStr);
   const evList   = document.getElementById('overlay-events-list');
-  // Also surface checkpoints for this day
-  const mnNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dismissed = getDismissedCPs();
-  const dayCPs = (data.checkpoints || []).filter(cp => {
-    if (dismissed.has(`${cp.date}|${cp.name}`)) return false;
-    const mIdx = mnNames.findIndex(m => cp.date.includes(m));
-    const dm = cp.date.match(/\d+/);
-    return mIdx === date.getMonth() && dm && parseInt(dm[0]) === date.getDate();
+  // Surface dependencies for this day (by resolveBy date)
+  const dayDepsResolved = getResolvedDeps();
+  const dayDeps = (data.dependencies || []).filter(dep => {
+    if (!dep.resolveBy) return false;
+    if (dep.resolved || dayDepsResolved.has(dep.id)) return false;
+    const dd = new Date(dep.resolveBy + 'T00:00:00');
+    return dd.getFullYear() === date.getFullYear() && dd.getMonth() === date.getMonth() && dd.getDate() === date.getDate();
   });
-  const cpHtml = dayCPs.map(cp => {
-    const gs = getGroupStyle(cp.project);
-    const col = gs ? gs.color : '#5bb8c8';
+  const depHtml = dayDeps.map(dep => {
+    const col = dep.workflowColor || '#c8a87a';
     return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
-      <div style="width:3px;height:28px;border-radius:2px;background:${col};flex-shrink:0;"></div>
+      <div style="width:8px;height:8px;transform:rotate(45deg);border:1.5px solid ${col};flex-shrink:0;border-radius:1px;"></div>
       <div style="flex:1;">
-        <div style="font-size:0.8rem;color:${col};font-weight:600;letter-spacing:.05em;text-transform:uppercase;">Checkpoint</div>
-        <div style="font-size:0.9rem;color:var(--text);font-weight:500;">${cp.name}</div>
-        <div style="font-size:0.75rem;color:var(--text3);">${cp.project}</div>
+        <div style="font-size:0.75rem;color:${col};font-weight:600;letter-spacing:.05em;text-transform:uppercase;">Dependency</div>
+        <div style="font-size:0.9rem;color:var(--text);font-weight:500;">${dep.title}</div>
+        <div style="font-size:0.75rem;color:var(--text3);">→ ${dep.parentTitle || '—'}</div>
       </div>
     </div>`;
   }).join('');
 
-  if (dayEvts.length === 0 && dayCPs.length === 0) {
+  if (dayEvts.length === 0 && dayDeps.length === 0) {
     evList.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">Nothing scheduled</div>';
   } else {
     const evHtml = dayEvts.map(e => `
@@ -1316,7 +1440,7 @@ function openOverlay(date) {
           onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">✕</button>
       </div>`).join('');
-    evList.innerHTML = cpHtml + evHtml;
+    evList.innerHTML = depHtml + evHtml;
   }
 
   // Always open to day view
