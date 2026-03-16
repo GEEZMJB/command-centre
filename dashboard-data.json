@@ -1,65 +1,29 @@
 {
-  "lastSync": "2026-03-15T19:05:35",
-  "checkpoints": [
-    {
-      "date": "Mar 12",
-      "name": "Carrd v2 copy live",
-      "project": "Grant Writing Freelance",
-      "color": "#c8a87a"
-    },
-    {
-      "date": "Mar 13",
-      "name": "Post-meeting steps: shared drive, share docs, delegate tasks + Hanwen onboarding",
-      "project": "Skate Haven CIC",
-      "color": "#bf7a7a"
-    },
-    {
-      "date": "Mar 14",
-      "name": "Assessor page drafted",
-      "project": "Assessor Pool Applications",
-      "color": "#7ab8c8"
-    },
-    {
-      "date": "Mar 17",
-      "name": "MEAL role scan complete",
-      "project": "MEAL / Evaluation Roles",
-      "color": "#a8c87a"
-    },
-    {
-      "date": "Mar 17",
-      "name": "Camp promo check-in",
-      "project": "Skate Haven CIC",
-      "color": "#7ab8c8"
-    },
-    {
-      "date": "Mar 20",
-      "name": "Approach Tom",
-      "project": "Skate Haven CIC",
-      "color": "#c8a87a"
-    },
-    {
-      "date": "Mar 24",
-      "name": "Send bid writing outreach to Decathlon partners",
-      "project": "Bid Writing Outreach",
-      "color": "#a87ac8"
-    }
-  ],
+  "lastSync": "2026-03-16T14:20:18",
   "agenda": [
     {
-      "time": "07:30",
-      "_date": "2026-03-15T07:30:00",
-      "title": "BB Meet",
-      "meta": "1h",
-      "tag": "work",
-      "calendar": "migisjobbot@gmail.com"
+      "time": "00:00",
+      "_date": "2026-03-16T00:00:00",
+      "title": "RICO & CONOR",
+      "meta": "23h 59m",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
     },
     {
-      "time": "15:30",
-      "_date": "2026-03-15T15:30:00",
-      "title": "SH Meet",
+      "time": "16:00",
+      "_date": "2026-03-18T16:00:00",
+      "title": "Meet w tom",
       "meta": "1h",
       "tag": "skate",
       "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "15:15",
+      "_date": "2026-03-19T15:15:00",
+      "title": "BB meet",
+      "meta": "1h",
+      "tag": "personal",
+      "calendar": "Home"
     },
     {
       "time": "00:00",
@@ -84,6 +48,35 @@
       "meta": "23h 59m",
       "tag": "personal",
       "calendar": "Home"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "dep_001",
+      "title": "Confirm venue availability",
+      "parentTitle": "Skate Haven Launch",
+      "parentType": "event",
+      "resolveBy": "2026-03-20",
+      "resolved": false,
+      "workflowColor": "#e07838"
+    },
+    {
+      "id": "dep_002",
+      "title": "Submit CIC paperwork",
+      "parentTitle": "CIC Operations",
+      "parentType": "event",
+      "resolveBy": "2026-03-25",
+      "resolved": false,
+      "workflowColor": "#e07838"
+    },
+    {
+      "id": "dep_003",
+      "title": "Grant narrative first draft",
+      "parentTitle": "Grant Writing Freelance",
+      "parentType": "event",
+      "resolveBy": "2026-03-22",
+      "resolved": false,
+      "workflowColor": "#6a9cd8"
     }
   ],
   "workflows": [
@@ -151,7 +144,7 @@
       "id": 3,
       "title": "Send camp content and sort out consent",
       "project": "SKATE HAVEN",
-      "due": "tomorrow",
+      "due": "today",
       "priority": "high",
       "done": false
     },
