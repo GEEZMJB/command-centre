@@ -1473,6 +1473,9 @@ function toggleTask(id) {
   else           doneKeys.delete(taskKey(task));
   localStorage.setItem('doneTasks', JSON.stringify([...doneKeys]));
   renderTasks();
+  // Write-back to vault so workflow pcts update via file watcher
+  calBridgePost('/tasks/toggle', { file: task.file || '', title: task.title, done: task.done })
+    .catch(e => console.warn('Task write-back failed:', e));
 }
 
 function filterTasks(filter, btn) {
