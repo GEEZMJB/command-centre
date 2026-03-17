@@ -1090,11 +1090,32 @@ async function loadDashboardData() {
   }
 }
 
+// ── Auto-refresh: poll dashboard-data.json every 8s, re-render if changed ──
+let _lastSyncTs = null;
+async function pollForUpdates() {
+  try {
+    const resp = await fetch('dashboard-data.json?t=' + Date.now());
+    if (!resp.ok) return;
+    const fresh = await resp.json();
+    if (fresh.lastSync !== _lastSyncTs) {
+      _lastSyncTs = fresh.lastSync;
+      data = fresh;
+      renderWorkflows();
+      renderTasks();
+      renderDependencies();
+      // Subtle flash on the last-sync indicator if it exists
+      const el = document.getElementById('last-sync');
+      if (el) { el.style.opacity = '0.4'; setTimeout(() => el.style.opacity = '', 600); }
+    }
+  } catch (e) { /* silent — network/parse errors are non-fatal during polling */ }
+}
+
 let currentFilter = 'all';
 let calDate = new Date();
 
 async function init() {
   await loadDashboardData();
+  _lastSyncTs = data && data.lastSync || null;
   applyPersistedState();
   initGcalAuth();
   renderHeader();
@@ -1105,6 +1126,8 @@ async function init() {
   // Retry any GCal writes that failed in a previous session
   // (token may not be ready yet — processRetryQueue checks internally)
   setTimeout(() => processRetryQueue(), 3000);
+  // Start polling for live updates from vault-watcher syncs
+  setInterval(pollForUpdates, 8000);
 }
 
 function renderHeader() {
