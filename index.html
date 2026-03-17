@@ -747,6 +747,131 @@
   .cal-day:not(.other-month) { cursor: pointer; }
   .cal-day:not(.other-month):hover { background: var(--surface2); border-radius: 4px; }
 
+  /* ── MOBILE RESPONSIVE (max-width: 768px) ──────────────────────────────────
+     CSS-only additions — no desktop styles altered above this block.
+  ── */
+  @media (max-width: 768px) {
+
+    /* ── BODY ── */
+    body { font-size: 14px; }
+
+    /* ── DASHBOARD WRAPPER ── */
+    #dashboard { padding: 14px; }
+
+    /* ── HEADER — stack vertically ── */
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .header-left h1 { font-size: 26px; }
+    .header-right { width: 100%; }
+
+    /* ── GRID — single full-width column, natural stacking order ── */
+    .grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .panel-calendar  { grid-column: 1; grid-row: auto; }
+    .panel-deps      { grid-column: 1; grid-row: auto; }
+    .panel-workflows { grid-column: 1; grid-row: auto; }
+    .panel-tasks     { grid-column: 1; grid-row: auto; }
+
+    /* ── PANELS ── */
+    .panel { padding: 14px; }
+
+    /* ── PASSWORD SCREEN ── */
+    .lock-input {
+      width: min(300px, 90vw);
+      font-size: 16px; /* prevent iOS auto-zoom */
+      padding: 14px 20px;
+    }
+    .lock-btn {
+      padding: 14px 40px;
+      font-size: 12px;
+      min-height: 44px;
+    }
+
+    /* ── CALENDAR NAV BUTTONS ── */
+    .cal-nav button {
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+    }
+
+    /* ── CALENDAR DAYS — larger tap targets ── */
+    .cal-day {
+      font-size: 12px;
+      min-height: 36px;
+    }
+    .cal-day-label { font-size: 11px; }
+
+    /* ── DEPENDENCY PANEL ── */
+    .dep-item { padding: 12px 8px; }
+    .dep-title { font-size: 13px; }
+    .dep-check {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+    }
+    .dep-item.resolved .dep-check::after { font-size: 12px; }
+
+    /* ── TASKS PANEL ── */
+    .task-item { padding: 12px 8px; min-height: 44px; }
+    .task-title { font-size: 13px; }
+    .task-check {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+    }
+    .task-item.done .task-check::after { font-size: 12px; }
+
+    /* ── FILTER BUTTONS ── */
+    .tasks-filters { flex-wrap: wrap; gap: 6px; }
+    .filter-btn {
+      padding: 8px 12px;
+      font-size: 10px;
+      min-height: 36px;
+    }
+
+    /* ── WORKFLOWS ── */
+    .workflow-name { font-size: 13px; }
+    .workflow-next { font-size: 11px; }
+
+    /* ── CALENDAR OVERLAY — full-screen on mobile ── */
+    /* Overrides JS-injected inline positioning */
+    .overlay-box {
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      border-left: none;
+      border-right: none;
+      border-radius: 0;
+    }
+    #overlay-events-list {
+      max-height: 45vh;
+    }
+
+    /* ── OVERLAY FORM INPUTS — font-size 16px prevents iOS zoom ── */
+    .overlay-input,
+    .overlay-select {
+      font-size: 16px;
+      padding: 12px 14px;
+      min-height: 44px;
+    }
+    .overlay-btn {
+      padding: 14px;
+      font-size: 13px;
+      min-height: 44px;
+    }
+
+    /* ── HIDE MOUSE-ONLY TOOLTIP ON TOUCH ── */
+    #cal-tooltip { display: none !important; }
+
+  } /* end @media (max-width: 768px) */
+
 </style>
   <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
