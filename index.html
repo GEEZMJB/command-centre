@@ -2136,15 +2136,18 @@ function updateSyncTime() {
         <div>
           <div class="overlay-title" id="overlay-day-label" style="margin-bottom:0"></div>
         </div>
-        <button onclick="closeOverlay()" title="Close"
-          style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);cursor:pointer;font-size:13px;flex-shrink:0;"
-          onmouseover="this.style.borderColor='var(--text2)'"
-          onmouseout="this.style.borderColor='var(--border)'">✕</button>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="showCreateForm()" title="New event"
+            style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);cursor:pointer;font-size:15px;line-height:1;"
+            onmouseover="this.style.borderColor='var(--text2)'"
+            onmouseout="this.style.borderColor='var(--border)'">+</button>
+          <button onclick="closeOverlay()" title="Close"
+            style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text2);cursor:pointer;font-size:13px;flex-shrink:0;"
+            onmouseover="this.style.borderColor='var(--text2)'"
+            onmouseout="this.style.borderColor='var(--border)'">✕</button>
+        </div>
       </div>
       <div id="overlay-events-list" style="min-height:40px;max-height:220px;overflow-y:auto;margin-bottom:12px;"></div>
-      <div class="overlay-actions">
-        <button class="overlay-btn primary" style="width:100%" onclick="showCreateForm()">＋ New Event</button>
-      </div>
     </div>
 
     <!-- ── Create Form (shown after clicking + New Event) ── -->
