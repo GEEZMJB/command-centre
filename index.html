@@ -1371,6 +1371,11 @@ function toggleDep(id) {
   localStorage.setItem('resolvedDeps', JSON.stringify([...resolved]));
   renderDependencies();
   renderCalendar();
+  // Write-back to vault so the file stays in sync with dashboard state
+  if (dep) {
+    calBridgePost('/dependencies/toggle', { title: dep.title, resolved: !wasResolved })
+      .catch(e => console.warn('Dep write-back failed:', e));
+  }
 }
 
 function renderWorkflows() {
