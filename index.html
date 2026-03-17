@@ -1075,8 +1075,7 @@ function renderCalendar() {
     const cellDeps = depMap[d] || [];
     if (agendaDay.length || cellDeps.length) {
       const tipHtml = buildCalTooltip(agendaDay, cellDeps);
-      el.addEventListener('mouseenter', e => showCalTooltip(e, tipHtml));
-      el.addEventListener('mousemove',  moveCalTooltip);
+      el.addEventListener('mouseenter', () => showCalTooltip(el, tipHtml));
       el.addEventListener('mouseleave', hideCalTooltip);
     }
 
@@ -1971,21 +1970,24 @@ function buildCalTooltip(dayEvts, dayDeps) {
   return html;
 }
 
-function showCalTooltip(e, html) {
+function showCalTooltip(cell, html) {
   const tip = document.getElementById('cal-tooltip');
   if (!tip || !html) return;
   tip.innerHTML = html;
+  // Reset transform so offsetHeight reads correctly
+  tip.style.transform = '';
   tip.classList.add('visible');
-  moveCalTooltip(e);
-}
-
-function moveCalTooltip(e) {
-  const tip = document.getElementById('cal-tooltip');
-  if (!tip || !tip.classList.contains('visible')) return;
-  const x = e.clientX + 14;
-  const y = e.clientY - 10;
-  tip.style.left = Math.min(x, window.innerWidth  - tip.offsetWidth  - 8) + 'px';
-  tip.style.top  = Math.min(y, window.innerHeight - tip.offsetHeight - 8) + 'px';
+  // Position anchored to the cell, not the cursor
+  const r    = cell.getBoundingClientRect();
+  const tipW = tip.offsetWidth  || 230;
+  const tipH = tip.offsetHeight || 100;
+  // Horizontally: centred on the cell, clamped to viewport
+  const x = Math.max(8, Math.min(r.left + r.width / 2 - tipW / 2, window.innerWidth - tipW - 8));
+  // Vertically: below the cell if room, otherwise above
+  const spaceBelow = window.innerHeight - r.bottom - 8;
+  const y = spaceBelow >= tipH + 6 ? r.bottom + 6 : r.top - tipH - 6;
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
 }
 
 function hideCalTooltip() {
