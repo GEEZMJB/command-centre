@@ -1373,7 +1373,7 @@ function toggleDep(id) {
   renderCalendar();
   // Write-back to vault so the file stays in sync with dashboard state
   if (dep) {
-    calBridgePost('/dependencies/toggle', { title: dep.title, resolved: !wasResolved })
+    calServerPost('/dependencies/toggle', { title: dep.title, resolved: !wasResolved })
       .catch(e => console.warn('Dep write-back failed:', e));
   }
 }
@@ -1479,7 +1479,7 @@ function toggleTask(id) {
   localStorage.setItem('doneTasks', JSON.stringify([...doneKeys]));
   renderTasks();
   // Write-back to vault so workflow pcts update via file watcher
-  calBridgePost('/tasks/toggle', { file: task.file || '', title: task.title, done: task.done })
+  calServerPost('/tasks/toggle', { file: task.file || '', title: task.title, done: task.done })
     .catch(e => console.warn('Task write-back failed:', e));
 }
 
