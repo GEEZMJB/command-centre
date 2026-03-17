@@ -436,23 +436,6 @@
     color: var(--text);
   }
 
-  .workflow-pct {
-    font-size: 11px;
-    color: var(--accent);
-  }
-
-  .workflow-bar-bg {
-    height: 3px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    margin-bottom: 6px;
-  }
-
-  .workflow-bar-fill {
-    height: 100%;
-    transition: width 0.8s ease;
-  }
-
   .workflow-status {
     display: flex;
     justify-content: space-between;
@@ -1090,32 +1073,11 @@ async function loadDashboardData() {
   }
 }
 
-// ── Auto-refresh: poll dashboard-data.json every 8s, re-render if changed ──
-let _lastSyncTs = null;
-async function pollForUpdates() {
-  try {
-    const resp = await fetch('dashboard-data.json?t=' + Date.now());
-    if (!resp.ok) return;
-    const fresh = await resp.json();
-    if (fresh.lastSync !== _lastSyncTs) {
-      _lastSyncTs = fresh.lastSync;
-      data = fresh;
-      renderWorkflows();
-      renderTasks();
-      renderDependencies();
-      // Subtle flash on the last-sync indicator if it exists
-      const el = document.getElementById('last-sync');
-      if (el) { el.style.opacity = '0.4'; setTimeout(() => el.style.opacity = '', 600); }
-    }
-  } catch (e) { /* silent — network/parse errors are non-fatal during polling */ }
-}
-
 let currentFilter = 'all';
 let calDate = new Date();
 
 async function init() {
   await loadDashboardData();
-  _lastSyncTs = data && data.lastSync || null;
   applyPersistedState();
   initGcalAuth();
   renderHeader();
@@ -1126,8 +1088,6 @@ async function init() {
   // Retry any GCal writes that failed in a previous session
   // (token may not be ready yet — processRetryQueue checks internally)
   setTimeout(() => processRetryQueue(), 3000);
-  // Start polling for live updates from vault-watcher syncs
-  setInterval(pollForUpdates, 8000);
 }
 
 function renderHeader() {
@@ -1371,11 +1331,6 @@ function toggleDep(id) {
   localStorage.setItem('resolvedDeps', JSON.stringify([...resolved]));
   renderDependencies();
   renderCalendar();
-  // Write-back to vault so the file stays in sync with dashboard state
-  if (dep) {
-    calServerPost('/dependencies/toggle', { title: dep.title, resolved: !wasResolved })
-      .catch(e => console.warn('Dep write-back failed:', e));
-  }
 }
 
 function renderWorkflows() {
@@ -1386,10 +1341,6 @@ function renderWorkflows() {
     <div class="workflow-item">
       <div class="workflow-header">
         <div class="workflow-name">${wf.name}</div>
-        <div class="workflow-pct">${wf.pct}%</div>
-      </div>
-      <div class="workflow-bar-bg">
-        <div class="workflow-bar-fill" style="width:${wf.pct}%;background:${colors[wf.status]}"></div>
       </div>
       <div class="workflow-status">
         <span class="status-badge status-${wf.status}">${wf.status}</span>
@@ -1478,9 +1429,6 @@ function toggleTask(id) {
   else           doneKeys.delete(taskKey(task));
   localStorage.setItem('doneTasks', JSON.stringify([...doneKeys]));
   renderTasks();
-  // Write-back to vault so workflow pcts update via file watcher
-  calServerPost('/tasks/toggle', { file: task.file || '', title: task.title, done: task.done })
-    .catch(e => console.warn('Task write-back failed:', e));
 }
 
 function filterTasks(filter, btn) {

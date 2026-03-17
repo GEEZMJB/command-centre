@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-17T20:37:46",
+  "lastSync": "2026-03-17T20:44:59",
   "events": [
     {
       "time": "00:00",
@@ -248,7 +248,6 @@
       "id": 1,
       "title": "Follow-up w Leon",
       "project": "GRANTS",
-      "file": "GRANTS/Tasks.md",
       "due": "\u2014",
       "priority": "high",
       "done": false
@@ -257,7 +256,6 @@
       "id": 2,
       "title": "Get Grant GEEZ setup",
       "project": "GRANTS",
-      "file": "GRANTS/Tasks.md",
       "due": "\u2014",
       "priority": "high",
       "done": false
@@ -266,7 +264,6 @@
       "id": 3,
       "title": "Launch Easter Camp Booking link",
       "project": "SKATE HAVEN",
-      "file": "SKATE HAVEN/Tasks.md",
       "due": "overdue",
       "priority": "high",
       "done": false
@@ -275,7 +272,6 @@
       "id": 4,
       "title": "Hanwen's onboarding (CYH & Coop)",
       "project": "SKATE HAVEN",
-      "file": "SKATE HAVEN/Tasks.md",
       "due": "\u2014",
       "priority": "high",
       "done": false
@@ -284,7 +280,6 @@
       "id": 5,
       "title": "Send camp content and sort out consent",
       "project": "SKATE HAVEN",
-      "file": "SKATE HAVEN/Tasks.md",
       "due": "overdue",
       "priority": "high",
       "done": false
@@ -293,7 +288,6 @@
       "id": 6,
       "title": "Carrd site live with v2 copy (all sections)",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -302,7 +296,6 @@
       "id": 7,
       "title": "Assessor/evaluation Carrd page live with direct URL",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -311,7 +304,6 @@
       "id": 8,
       "title": "Professional indemnity insurance purchased and badge displayed",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -320,7 +312,6 @@
       "id": 9,
       "title": "Charity Excellence Funding Finder application submitted",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -329,7 +320,6 @@
       "id": 10,
       "title": "LinkedIn profile updated with cross-track positioning",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -338,7 +328,6 @@
       "id": 11,
       "title": "Blume registration submitted",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -347,7 +336,6 @@
       "id": 12,
       "title": "Assessor pool prospect list in Obsidian, first applications submitted",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -356,7 +344,6 @@
       "id": 13,
       "title": "Grant writing prospect pipeline in Obsidian, first outreach wave sent",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -365,7 +352,6 @@
       "id": 14,
       "title": "MEAL role scan in Obsidian, first applications submitted",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -374,7 +360,6 @@
       "id": 15,
       "title": "Outreach templates saved in Obsidian",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
@@ -383,7 +368,6 @@
       "id": 16,
       "title": "GEEZ recurring tasks set up: MEAL scan (fortnightly), prospect pipeline refresh ",
       "project": "Sprint Plan",
-      "file": "JOBSEEK/Sprint Plan/Pilot - Sprint Plan - Milestone 1 - 2026-03-03.md",
       "due": "\u2014",
       "priority": "med",
       "done": false
