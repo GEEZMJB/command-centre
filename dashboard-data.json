@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-17T19:22:32",
+  "lastSync": "2026-03-17T20:10:07",
   "events": [
     {
       "time": "00:00",
@@ -194,35 +194,35 @@
     {
       "name": "Grant Writing Freelance (Track 0)",
       "group": "Grants",
-      "pct": 65,
+      "pct": 0,
       "status": "active",
       "next": "Draft cold outreach template for grant writing clients (Checkpoint 3.4)"
     },
     {
       "name": "Assessor Pool Applications (Track 2)",
       "group": "Jobseek",
-      "pct": 45,
+      "pct": 0,
       "status": "active",
       "next": "Submit EOI to Ufi VocTech Trust, City Bridge Foundation, and Rosa Fund"
     },
     {
       "name": "MEAL / Evaluation Roles (Track 4)",
       "group": "Jobseek",
-      "pct": 35,
+      "pct": 0,
       "status": "active",
       "next": "Decide on High Trees MEL Lead application (deadline 15 March)"
     },
     {
       "name": "Skate Haven Admin (CIC Operations)",
       "group": "Skate Haven Admin",
-      "pct": 40,
+      "pct": 0,
       "status": "active",
       "next": "Run co-directors meeting; finalise mentoring safeguarding protocol, Easter camp publish, and space strategy direction"
     },
     {
       "name": "Dashboard Config",
       "group": "Dashboard Setup",
-      "pct": 60,
+      "pct": 0,
       "status": "active",
       "next": "GitHub Pages + Plash config"
     }
