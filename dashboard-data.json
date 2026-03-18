@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-18T20:11:37",
+  "lastSync": "2026-03-18T20:40:42",
   "events": [
     {
       "time": "09:00",
@@ -26,10 +26,10 @@
       "calendar": "Skate Haven Calendar"
     },
     {
-      "time": "13:00",
-      "_date": "2026-03-19T13:00:00",
+      "time": "09:00",
+      "_date": "2026-03-19T09:00:00",
       "title": "sunny",
-      "meta": "2h",
+      "meta": "5h",
       "tag": "work",
       "calendar": "migisjobbot@gmail.com"
     },
