@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-18T19:10:31",
+  "lastSync": "2026-03-18T19:14:36",
   "events": [
     {
       "time": "09:00",
@@ -272,146 +272,26 @@
     },
     {
       "id": 3,
-      "title": "Confirm CIC formation timeline with Landshark founder \u2014 when will articles of as",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
+      "title": "Launch Easter Camp Booking link",
+      "project": "SKATE HAVEN",
+      "due": "overdue",
+      "priority": "high",
       "done": false
     },
     {
       "id": 4,
-      "title": "Clarify open questions from strategy document (beneficiaries, educational compon",
-      "project": "GRANTS",
+      "title": "Hanwen's onboarding (CYH & Coop)",
+      "project": "SKATE HAVEN",
       "due": "\u2014",
-      "priority": "med",
+      "priority": "high",
       "done": false
     },
     {
       "id": 5,
-      "title": "Run geography checks for SE5 0AL:",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 6,
-      "title": "List all funds Skate Haven has previously won \u2014 this becomes the replication sho",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 7,
-      "title": "Begin drafting founder narrative for Shackleton Foundation application",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 8,
-      "title": "Draft Shackleton Foundation application (\u00a315k, deadline 27 April)",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 9,
-      "title": "Research The Fore application requirements (opens 1 April)",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 10,
-      "title": "Review Skate Haven's previous winning applications for reusable narrative patter",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 11,
-      "title": "Note: Tier 1 funds close this week \u2014 these are Skate Haven opportunities only (H",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 12,
-      "title": "The Fore opens 1 April \u2014 begin application immediately",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 13,
-      "title": "If CIC not yet formed: contact The Fore to confirm whether applications can be s",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 14,
-      "title": "Continue refining Shackleton draft",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 15,
-      "title": "St Olave's Foundation deadline 7 April \u2014 only applicable if educational componen",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 16,
-      "title": "Draft Sport England Movement Fund application (up to \u00a315k, rolling)",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 17,
-      "title": "Review and finalise Shackleton draft",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 18,
-      "title": "Chase Companies House on CIC formation if not yet confirmed",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 19,
-      "title": "If geography checks unlocked SUEZ (\u00a350k) or Biffa (\u00a375k): begin research on appl",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
-      "done": false
-    },
-    {
-      "id": 20,
-      "title": "Heart Research UK opens 22 April (\u00a315k)",
-      "project": "GRANTS",
-      "due": "\u2014",
-      "priority": "med",
+      "title": "Send camp content and sort out consent",
+      "project": "SKATE HAVEN",
+      "due": "overdue",
+      "priority": "high",
       "done": false
     }
   ]
