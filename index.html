@@ -599,44 +599,6 @@
   .task-item.dragging { opacity: 0.35; }
   .task-item.drag-over { border-top: 2px solid var(--accent) !important; }
 
-  /* ── DEP DRAG ── */
-  .dep-item[draggable="true"] { cursor: grab; }
-  .dep-item[draggable="true"]:active { cursor: grabbing; }
-  .dep-item.dragging { opacity: 0.35; }
-  .dep-item.drag-over { border-top: 2px solid var(--accent2) !important; }
-
-  /* ── STAR / HIGHLIGHT ── */
-  .star-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text3);
-    font-size: 20px;
-    padding: 0 4px;
-    flex-shrink: 0;
-    line-height: 1;
-    transition: color 0.15s, transform 0.1s;
-    align-self: center;
-    margin-left: 6px;
-    font-family: inherit;
-  }
-  .star-btn:hover { color: var(--accent); transform: scale(1.2); }
-  .star-btn.starred { color: var(--accent); }
-
-  /* Starred item highlight — bold, unmissable */
-  .task-item.item-starred {
-    background: rgba(200,184,138,0.22) !important;
-    border: 1px solid rgba(200,184,138,0.45) !important;
-    border-left: 3px solid var(--accent) !important;
-    box-shadow: 0 2px 18px rgba(200,184,138,0.18);
-  }
-  .dep-item.item-starred {
-    background: rgba(200,184,138,0.22) !important;
-    border-left-color: var(--accent) !important;
-    border-bottom-color: rgba(200,184,138,0.25) !important;
-    box-shadow: 0 2px 18px rgba(200,184,138,0.18);
-  }
-
   /* ── DIVIDER LABEL ── */
   .section-divider {
     font-size: 9px;
@@ -1277,39 +1239,6 @@ function setTaskOrder(ids) {
   localStorage.setItem('taskOrder', JSON.stringify(ids));
 }
 
-function getDepOrder() {
-  try { return JSON.parse(localStorage.getItem('depOrder') || 'null'); }
-  catch { return null; }
-}
-function setDepOrder(ids) {
-  localStorage.setItem('depOrder', JSON.stringify(ids));
-}
-
-function getStarred() {
-  try {
-    const s = JSON.parse(localStorage.getItem('starred') || '{}');
-    return { tasks: new Set((s.tasks || []).map(String)), deps: new Set((s.deps || []).map(String)) };
-  } catch { return { tasks: new Set(), deps: new Set() }; }
-}
-function saveStarred(s) {
-  localStorage.setItem('starred', JSON.stringify({ tasks: [...s.tasks], deps: [...s.deps] }));
-}
-
-function toggleStar(type, id, e) {
-  e.stopPropagation();
-  const starred = getStarred();
-  const sid = String(id);
-  if (starred[type].has(sid)) starred[type].delete(sid);
-  else starred[type].add(sid);
-  saveStarred(starred);
-  if (type === 'tasks') renderTasks();
-  else renderDependencies();
-}
-
-function updatePanelHighlights() {
-  // Panel-level highlight removed — highlight is applied per-item only
-}
-
 function taskKey(t) { return `${t.title}|||${t.project}`; }
 
 // Apply persisted state onto freshly-loaded data
@@ -1337,15 +1266,6 @@ function applyPersistedState() {
     const rest = (data.tasks || []).filter(t => !order.includes(t.id));
     data.tasks = [...reordered, ...rest];
   }
-  // Apply custom dep order from localStorage
-  const depOrder = getDepOrder();
-  if (depOrder && depOrder.length) {
-    const depMap2 = {};
-    (data.dependencies || []).forEach(d => { depMap2[d.id] = d; });
-    const reordered2 = depOrder.map(id => depMap2[id]).filter(Boolean);
-    const rest2 = (data.dependencies || []).filter(d => !depOrder.includes(d.id));
-    data.dependencies = [...reordered2, ...rest2];
-  }
 }
 
 function formatDepDate(dateStr) {
@@ -1364,32 +1284,24 @@ function renderDependencies() {
   const list = document.getElementById('deps-list');
   if (!list) return;
   const resolved = getResolvedDeps();
-  const starred  = getStarred();
   const deps = (data.dependencies || []);
-  // Use data.dependencies array order (custom or default); only sort by date if no saved order
-  let unresolved = deps.filter(d => !d.resolved && !resolved.has(d.id));
-  if (!getDepOrder()) {
-    unresolved = [...unresolved].sort((a, b) => (a.resolveBy || '').localeCompare(b.resolveBy || ''));
-  }
+  const unresolved = deps
+    .filter(d => !d.resolved && !resolved.has(d.id))
+    .sort((a, b) => (a.resolveBy || '').localeCompare(b.resolveBy || ''));
   const resolvedList = deps.filter(d => d.resolved || resolved.has(d.id));
 
   if (unresolved.length === 0 && resolvedList.length === 0) {
     list.innerHTML = '<div style="color:var(--text3);padding:14px 0;font-size:0.85rem;text-align:center;">No dependencies</div>';
-    updatePanelHighlights();
     return;
   }
 
   const renderDep = (dep, isResolved) => {
-    const color      = getDepColor(dep);
-    const dateLabel  = dep.resolveBy ? formatDepDate(dep.resolveBy) : '—';
-    const dateStyle  = dateLabel === 'overdue' ? 'color:var(--red)' :
-                       dateLabel === 'today'   ? 'color:var(--amber)' : 'color:var(--text3)';
-    const isStarred  = starred.deps.has(String(dep.id));
+    const color = getDepColor(dep);
+    const dateLabel = dep.resolveBy ? formatDepDate(dep.resolveBy) : '—';
+    const dateStyle = dateLabel === 'overdue' ? 'color:var(--red)' :
+                      dateLabel === 'today'   ? 'color:var(--amber)' : 'color:var(--text3)';
     return `
-      <div class="dep-item${isResolved ? ' resolved' : ''}${isStarred ? ' item-starred' : ''}"
-           style="border-left-color:${color}"
-           data-id="${dep.id}"
-           draggable="${!isResolved}">
+      <div class="dep-item${isResolved ? ' resolved' : ''}" style="border-left-color:${color}">
         <div class="dep-check" onclick="toggleDep('${dep.id}')"></div>
         <div class="dep-body">
           <div class="dep-title">${dep.title}</div>
@@ -1398,9 +1310,6 @@ function renderDependencies() {
             <span class="dep-date" style="${dateStyle}">${dateLabel}</span>
           </div>
         </div>
-        <button class="star-btn${isStarred ? ' starred' : ''}"
-                onclick="toggleStar('deps','${dep.id}',event)"
-                title="${isStarred ? 'Remove highlight' : 'Highlight'}">${isStarred ? '★' : '☆'}</button>
       </div>`;
   };
 
@@ -1408,9 +1317,6 @@ function renderDependencies() {
     (resolvedList.length
       ? `<div class="section-divider">Resolved</div>` + resolvedList.map(d => renderDep(d, true)).join('')
       : '');
-
-  initDepDrag();
-  updatePanelHighlights();
 }
 
 function toggleDep(id) {
@@ -1493,14 +1399,12 @@ function renderTasks() {
     pending.sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1));
   }
 
-  const starredState = getStarred();
   const renderItem = t => {
     const gs = getGroupStyle(t.project);
     const bgStyle = gs && !t.done ? `background:${gs.bg};` : '';
     const borderColor = gs && !t.done ? gs.color : 'transparent';
-    const isStarred = starredState.tasks.has(String(t.id));
     return `
-    <div class="task-item ${t.done ? 'done' : ''}${isStarred ? ' item-starred' : ''}"
+    <div class="task-item ${t.done ? 'done' : ''}"
          style="${bgStyle}border-left:2px solid ${borderColor};"
          data-id="${t.id}"
          draggable="${!t.done}"
@@ -1513,9 +1417,6 @@ function renderTasks() {
         </div>
       </div>
       <div class="priority-dot pri-${t.priority}"></div>
-      <button class="star-btn${isStarred ? ' starred' : ''}"
-              onclick="toggleStar('tasks',${t.id},event)"
-              title="${isStarred ? 'Remove highlight' : 'Highlight'}">${isStarred ? '★' : '☆'}</button>
     </div>`;
   };
 
@@ -1523,7 +1424,6 @@ function renderTasks() {
     (done.length ? `<div class="section-divider">Completed</div>` + done.map(renderItem).join('') : '');
 
   initTaskDrag();
-  updatePanelHighlights();
 }
 
 function toggleTask(id) {
@@ -1593,57 +1493,6 @@ function onDrop(e) {
 function onDragEnd() {
   dragSrcId = null;
   document.querySelectorAll('.task-item').forEach(el => {
-    el.classList.remove('dragging', 'drag-over');
-  });
-}
-
-// ── DRAG TO REORDER — DEPENDENCIES ──────────────────────────────────────────
-let depDragSrcId = null;
-
-function initDepDrag() {
-  document.querySelectorAll('.dep-item[draggable="true"]').forEach(item => {
-    item.addEventListener('dragstart', onDepDragStart);
-    item.addEventListener('dragover',  onDepDragOver);
-    item.addEventListener('dragleave', onDepDragLeave);
-    item.addEventListener('drop',      onDepDrop);
-    item.addEventListener('dragend',   onDepDragEnd);
-  });
-}
-
-function onDepDragStart(e) {
-  depDragSrcId = this.dataset.id;
-  this.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-
-function onDepDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  document.querySelectorAll('.dep-item').forEach(el => el.classList.remove('drag-over'));
-  this.classList.add('drag-over');
-}
-
-function onDepDragLeave() {
-  this.classList.remove('drag-over');
-}
-
-function onDepDrop(e) {
-  e.stopPropagation();
-  const targetId = this.dataset.id;
-  if (!depDragSrcId || depDragSrcId === targetId) return;
-  const deps   = data.dependencies;
-  const srcIdx = deps.findIndex(d => d.id === depDragSrcId);
-  const tgtIdx = deps.findIndex(d => d.id === targetId);
-  if (srcIdx === -1 || tgtIdx === -1) return;
-  const [moved] = deps.splice(srcIdx, 1);
-  deps.splice(tgtIdx, 0, moved);
-  setDepOrder(deps.map(d => d.id));
-  renderDependencies();
-}
-
-function onDepDragEnd() {
-  depDragSrcId = null;
-  document.querySelectorAll('.dep-item').forEach(el => {
     el.classList.remove('dragging', 'drag-over');
   });
 }
