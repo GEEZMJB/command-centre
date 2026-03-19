@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-19T08:07:16",
+  "lastSync": "2026-03-19T08:12:04",
   "events": [
     {
       "time": "09:00",
@@ -16,6 +16,14 @@
       "meta": "1h",
       "tag": "personal",
       "calendar": "Home"
+    },
+    {
+      "time": "19:00",
+      "_date": "2026-03-19T19:00:00",
+      "title": "Sunny",
+      "meta": "2h",
+      "tag": "work",
+      "calendar": "migisjobbot@gmail.com"
     },
     {
       "time": "00:00",
