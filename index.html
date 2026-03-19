@@ -1153,6 +1153,8 @@ function renderCalendar() {
     el.textContent = d;
     // Build date string for this cell
     const cellDate = new Date(calDate.getFullYear(), calDate.getMonth(), d);
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isPastCell = cellDate < todayMidnight;
     el.onclick = () => openOverlay(cellDate);
     // Dependency halo — semi-transparent filled pill, rendered behind event dots
     if (depMap[d]) {
@@ -1160,7 +1162,9 @@ function renderCalendar() {
       const deps   = depMap[d].slice(0, 4);
       const colors = deps.map(dep => getDepColor(dep));
       const title  = deps.map(dep => `${dep.title} · ${dep.parentTitle}`).join('\n');
-      el.appendChild(makeDepHalo(colors, { bottom: 0, segSize: 10, title }));
+      const halo   = makeDepHalo(colors, { bottom: 0, segSize: 10, title });
+      if (isPastCell) { halo.style.opacity = '0.35'; halo.style.filter = 'grayscale(0.85) brightness(0.7)'; }
+      el.appendChild(halo);
     }
 
     // Event pip — pill with up to 4 colour segments (one per event, capped at 4)
@@ -1176,7 +1180,9 @@ function renderCalendar() {
       el.style.position = 'relative';
       const evs    = agendaDay.slice(0, 4);
       const colors = evs.map(getEventCalColor);
-      el.appendChild(makePip(colors, { bottom: 3, segSize: 4 }));
+      const pip    = makePip(colors, { bottom: 3, segSize: 4 });
+      if (isPastCell) { pip.style.opacity = '0.35'; pip.style.filter = 'grayscale(0.85) brightness(0.7)'; }
+      el.appendChild(pip);
     }
 
     // Hover tooltip — show brief event + dep info on mouseover
@@ -1605,6 +1611,16 @@ function openOverlay(date) {
       </div>
     </div>`;
   }).join('');
+
+  // Faded historical trace for past dates
+  const overlayTodayMidnight = new Date(); overlayTodayMidnight.setHours(0,0,0,0);
+  if (date < overlayTodayMidnight) {
+    evList.style.opacity = '0.38';
+    evList.style.filter  = 'grayscale(0.85) brightness(0.72)';
+  } else {
+    evList.style.opacity = '';
+    evList.style.filter  = '';
+  }
 
   if (dayEvts.length === 0 && dayDeps.length === 0) {
     evList.innerHTML = '<div style="color:var(--text3);padding:8px 0;font-size:0.85rem;text-align:center;">Nothing scheduled</div>';
