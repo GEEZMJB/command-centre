@@ -623,8 +623,9 @@
   .star-btn:hover { color: var(--accent); transform: scale(1.25); }
   .star-btn.starred { color: var(--accent); }
 
-  /* Starred panel — noticeably lighter than default surface (#111114) */
-  .panel.panel-starred { background: #1e1e28; }
+  /* Starred item highlight — applied to the row itself, not the panel */
+  .task-item.item-starred { background: rgba(200,184,138,0.07) !important; border-color: rgba(200,184,138,0.25) !important; }
+  .dep-item.item-starred  { background: rgba(200,184,138,0.07); }
 
   /* ── DIVIDER LABEL ── */
   .section-divider {
@@ -1296,11 +1297,7 @@ function toggleStar(type, id, e) {
 }
 
 function updatePanelHighlights() {
-  const starred = getStarred();
-  const tasksPanel = document.querySelector('.panel-tasks');
-  const depsPanel  = document.querySelector('.panel-deps');
-  if (tasksPanel) tasksPanel.classList.toggle('panel-starred', starred.tasks.size > 0);
-  if (depsPanel)  depsPanel.classList.toggle('panel-starred',  starred.deps.size  > 0);
+  // Panel-level highlight removed — highlight is applied per-item only
 }
 
 function taskKey(t) { return `${t.title}|||${t.project}`; }
@@ -1379,7 +1376,7 @@ function renderDependencies() {
                        dateLabel === 'today'   ? 'color:var(--amber)' : 'color:var(--text3)';
     const isStarred  = starred.deps.has(String(dep.id));
     return `
-      <div class="dep-item${isResolved ? ' resolved' : ''}"
+      <div class="dep-item${isResolved ? ' resolved' : ''}${isStarred ? ' item-starred' : ''}"
            style="border-left-color:${color}"
            data-id="${dep.id}"
            draggable="${!isResolved}">
@@ -1493,7 +1490,7 @@ function renderTasks() {
     const borderColor = gs && !t.done ? gs.color : 'transparent';
     const isStarred = starredState.tasks.has(String(t.id));
     return `
-    <div class="task-item ${t.done ? 'done' : ''}"
+    <div class="task-item ${t.done ? 'done' : ''}${isStarred ? ' item-starred' : ''}"
          style="${bgStyle}border-left:2px solid ${borderColor};"
          data-id="${t.id}"
          draggable="${!t.done}"
