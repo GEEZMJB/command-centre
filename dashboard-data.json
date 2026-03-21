@@ -1,38 +1,6 @@
 {
-  "lastSync": "2026-03-20T23:46:19",
+  "lastSync": "2026-03-21T00:16:22",
   "events": [
-    {
-      "time": "00:00",
-      "_date": "2026-03-20T00:00:00",
-      "title": "CW follow-up",
-      "meta": "23h 59m",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
-    {
-      "time": "00:00",
-      "_date": "2026-03-20T00:00:00",
-      "title": "Sign Decathlon agreement",
-      "meta": "23h 59m",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
-    {
-      "time": "09:00",
-      "_date": "2026-03-20T09:00:00",
-      "title": "Sunny to the doctor",
-      "meta": "1h",
-      "tag": "personal",
-      "calendar": "Home"
-    },
-    {
-      "time": "13:00",
-      "_date": "2026-03-20T13:00:00",
-      "title": "Sunny",
-      "meta": "2h",
-      "tag": "work",
-      "calendar": "migisjobbot@gmail.com"
-    },
     {
       "time": "09:30",
       "_date": "2026-03-24T09:30:00",
