@@ -1,10 +1,26 @@
 {
-  "lastSync": "2026-03-23T08:21:53",
+  "lastSync": "2026-03-23T08:46:08",
   "events": [
+    {
+      "time": "17:30",
+      "_date": "2026-03-23T17:30:00",
+      "title": "SH session",
+      "meta": "1h",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
+    },
     {
       "time": "09:30",
       "_date": "2026-03-24T09:30:00",
       "title": "Sport england check-in (ucl email)",
+      "meta": "1h",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "18:00",
+      "_date": "2026-03-24T18:00:00",
+      "title": "SH session",
       "meta": "1h",
       "tag": "skate",
       "calendar": "Skate Haven Calendar"
@@ -268,6 +284,14 @@
       "title": "Set meeting with R, H, T",
       "project": "SKATE HAVEN",
       "due": "\u2014",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": 8,
+      "title": "April: set up on Decathlon booking platform",
+      "project": "SKATE HAVEN",
+      "due": "Apr 30",
       "priority": "high",
       "done": false
     }
