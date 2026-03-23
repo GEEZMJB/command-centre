@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-23T07:21:46",
+  "lastSync": "2026-03-23T07:51:49",
   "events": [
     {
       "time": "09:30",
@@ -24,6 +24,14 @@
       "meta": "23h 59m",
       "tag": "skate",
       "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "07:00",
+      "_date": "2026-03-31T07:00:00",
+      "title": "Adobe gonna charge monthly",
+      "meta": "1h",
+      "tag": "personal",
+      "calendar": "Home"
     },
     {
       "time": "00:00",
