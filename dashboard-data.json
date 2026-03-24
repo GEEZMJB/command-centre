@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-24T10:03:21",
+  "lastSync": "2026-03-24T10:24:31",
   "events": [
     {
       "time": "00:00",
@@ -266,14 +266,6 @@
     },
     {
       "id": 3,
-      "title": "Launch Easter Camp Booking link",
-      "project": "SKATE HAVEN",
-      "due": "overdue",
-      "priority": "high",
-      "done": false
-    },
-    {
-      "id": 4,
       "title": "Hanwen's onboarding (CYH & Coop)",
       "project": "SKATE HAVEN",
       "due": "\u2014",
@@ -281,31 +273,7 @@
       "done": false
     },
     {
-      "id": 5,
-      "title": "Send camp content and sort out consent",
-      "project": "SKATE HAVEN",
-      "due": "overdue",
-      "priority": "high",
-      "done": false
-    },
-    {
-      "id": 6,
-      "title": "Sign Decathlon agreement",
-      "project": "SKATE HAVEN",
-      "due": "\u2014",
-      "priority": "high",
-      "done": false
-    },
-    {
-      "id": 7,
-      "title": "Set meeting with R, H, T",
-      "project": "SKATE HAVEN",
-      "due": "\u2014",
-      "priority": "high",
-      "done": false
-    },
-    {
-      "id": 8,
+      "id": 4,
       "title": "April: set up on Decathlon booking platform",
       "project": "SKATE HAVEN",
       "due": "Apr 30",
