@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-03-24T09:54:27",
+  "lastSync": "2026-03-24T10:03:21",
   "events": [
     {
       "time": "00:00",
@@ -21,6 +21,14 @@
       "time": "18:00",
       "_date": "2026-03-24T18:00:00",
       "title": "SH session",
+      "meta": "1h",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "09:30",
+      "_date": "2026-03-27T09:30:00",
+      "title": "SE check-in (UCL email)",
       "meta": "1h",
       "tag": "skate",
       "calendar": "Skate Haven Calendar"
@@ -140,7 +148,7 @@
     },
     {
       "id": "dep_008",
-      "title": "Get Instagram ad running",
+      "title": "Camp supplies!",
       "parentTitle": "Edu-Skate Camp Start",
       "parentType": "event",
       "resolveBy": "2026-03-30",
@@ -149,6 +157,15 @@
     },
     {
       "id": "dep_009",
+      "title": "Get Instagram ad running",
+      "parentTitle": "Edu-Skate Camp Start",
+      "parentType": "event",
+      "resolveBy": "2026-03-30",
+      "resolved": false,
+      "workflowColor": "#e07838"
+    },
+    {
+      "id": "dep_010",
       "title": "Check Decathlon fees (may be missing 2 Fridays)",
       "parentTitle": "Pay Decathlon April fees",
       "parentType": "event",
@@ -157,7 +174,7 @@
       "workflowColor": "#e07838"
     },
     {
-      "id": "dep_010",
+      "id": "dep_011",
       "title": "Pay Decathlon April fees",
       "parentTitle": "Edu-Skate Camp Start",
       "parentType": "event",
@@ -166,7 +183,7 @@
       "workflowColor": "#e07838"
     },
     {
-      "id": "dep_011",
+      "id": "dep_012",
       "title": "The Fore Grant opens",
       "parentTitle": "Grant Writing Freelance",
       "parentType": "event",
@@ -175,7 +192,7 @@
       "workflowColor": "#7aba8a"
     },
     {
-      "id": "dep_012",
+      "id": "dep_013",
       "title": "Draft the Fore application",
       "parentTitle": "The Fore Grant opens",
       "parentType": "event",
@@ -184,7 +201,7 @@
       "workflowColor": "#7aba8a"
     },
     {
-      "id": "dep_013",
+      "id": "dep_014",
       "title": "Check St Olave's educational component",
       "parentTitle": "St Olave's Foundation deadline",
       "parentType": "event",
