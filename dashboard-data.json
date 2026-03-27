@@ -1,63 +1,6 @@
 {
-  "lastSync": "2026-03-26T23:30:46",
-  "events": [
-    {
-      "time": "13:00",
-      "_date": "2026-03-30T13:00:00",
-      "title": "Edu-Skate Camp Start",
-      "meta": "2h",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
-    {
-      "time": "00:00",
-      "_date": "2026-03-31T00:00:00",
-      "title": "Pay Decathlon April fees",
-      "meta": "23h 59m",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
-    {
-      "time": "07:00",
-      "_date": "2026-03-31T07:00:00",
-      "title": "Adobe gonna charge monthly",
-      "meta": "1h",
-      "tag": "personal",
-      "calendar": "Home"
-    },
-    {
-      "time": "00:00",
-      "_date": "2026-04-07T00:00:00",
-      "title": "Thameswater maurer court due",
-      "meta": "23h 59m",
-      "tag": "personal",
-      "calendar": "Home"
-    },
-    {
-      "time": "09:00",
-      "_date": "2026-04-07T09:00:00",
-      "title": "St Olave's Foundation deadline",
-      "meta": "1h",
-      "tag": "work",
-      "calendar": "Work"
-    },
-    {
-      "time": "09:00",
-      "_date": "2026-04-08T09:00:00",
-      "title": "SE check-in (UCL email)",
-      "meta": "1h",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
-    {
-      "time": "09:00",
-      "_date": "2026-04-27T09:00:00",
-      "title": "Shackleton Foundation application deadline",
-      "meta": "1h",
-      "tag": "work",
-      "calendar": "Work"
-    }
-  ],
+  "lastSync": "2026-03-27T00:00:49",
+  "events": [],
   "dependencies": [
     {
       "id": "dep_001",
