@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-04-11T07:00:22",
+  "lastSync": "2026-04-11T07:12:42",
   "events": [
     {
       "time": "00:00",
@@ -263,6 +263,22 @@
       "project": "SKATE HAVEN",
       "due": "Apr 30",
       "priority": "high",
+      "done": false
+    },
+    {
+      "id": 6,
+      "title": "Launch Roll Models by beginning of summer",
+      "project": "SKATE HAVEN",
+      "due": "\u2014",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": 7,
+      "title": "Adjust SE budget/timeline",
+      "project": "SKATE HAVEN",
+      "due": "\u2014",
+      "priority": "med",
       "done": false
     }
   ]
