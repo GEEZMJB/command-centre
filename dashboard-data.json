@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-04-14T15:39:46",
+  "lastSync": "2026-04-14T16:09:49",
   "events": [
     {
       "time": "00:00",
@@ -48,6 +48,14 @@
       "meta": "71h 59m",
       "tag": "personal",
       "calendar": "Home"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-05-23T00:00:00",
+      "title": "Social skate summit",
+      "meta": "71h 59m",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
     },
     {
       "time": "00:00",
