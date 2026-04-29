@@ -1,14 +1,6 @@
 {
-  "lastSync": "2026-04-29T22:55:38",
+  "lastSync": "2026-04-29T23:25:42",
   "events": [
-    {
-      "time": "00:00",
-      "_date": "2026-04-29T00:00:00",
-      "title": "Brighton sk888",
-      "meta": "23h 59m",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
     {
       "time": "00:00",
       "_date": "2026-05-04T00:00:00",
@@ -292,7 +284,7 @@
       "id": 5,
       "title": "April: set up on Decathlon booking platform",
       "project": "SKATE HAVEN",
-      "due": "tomorrow",
+      "due": "today",
       "priority": "high",
       "done": false
     },
