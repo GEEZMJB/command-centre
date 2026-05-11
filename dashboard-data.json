@@ -1,11 +1,11 @@
 {
-  "lastSync": "2026-05-11T15:59:20",
+  "lastSync": "2026-05-11T16:29:24",
   "events": [
     {
       "time": "00:00",
       "_date": "2026-05-11T00:00:00",
       "title": "Sort council tax for maurer court",
-      "meta": "23h 59m",
+      "meta": "47h 59m",
       "tag": "personal",
       "calendar": "Home"
     },
@@ -24,6 +24,14 @@
       "meta": "23h 59m",
       "tag": "work",
       "calendar": "Work"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-05-12T00:00:00",
+      "title": "Skate Haven meet?",
+      "meta": "23h 59m",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
     },
     {
       "time": "00:00",
