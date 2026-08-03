@@ -1,41 +1,49 @@
 {
-  "lastSync": "2026-07-04T21:25:39",
+  "lastSync": "2026-08-03T09:44:14",
   "events": [
     {
-      "time": "10:00",
-      "_date": "2026-07-06T10:00:00",
-      "title": "Carole accountant call",
+      "time": "13:30",
+      "_date": "2026-08-05T13:30:00",
+      "title": "Therapy riri",
       "meta": "1h",
-      "tag": "skate",
-      "calendar": "Skate Haven Calendar"
-    },
-    {
-      "time": "07:45",
-      "_date": "2026-07-15T07:45:00",
-      "title": "Traffic course zoom (check email)",
-      "meta": "3h",
       "tag": "personal",
       "calendar": "Home"
     },
     {
-      "time": "00:00",
-      "_date": "2026-07-17T00:00:00",
-      "title": "Yogi Riri",
-      "meta": "71h 59m",
-      "tag": "personal",
-      "calendar": "Home"
-    },
-    {
-      "time": "00:00",
-      "_date": "2026-07-25T00:00:00",
-      "title": "Rico going on holiday for a week?",
-      "meta": "23h 59m",
+      "time": "11:00",
+      "_date": "2026-08-20T11:00:00",
+      "title": "CW check-in",
+      "meta": "1h",
       "tag": "skate",
       "calendar": "Skate Haven Calendar"
     },
     {
       "time": "00:00",
       "_date": "2026-08-21T00:00:00",
+      "title": "Yogi Riri",
+      "meta": "71h 59m",
+      "tag": "personal",
+      "calendar": "Home"
+    },
+    {
+      "time": "19:00",
+      "_date": "2026-08-28T19:00:00",
+      "title": "Extra participant: Ruben Locastro, 14y.o, gear incl. 7pm",
+      "meta": "1h",
+      "tag": "skate",
+      "calendar": "Skate Haven Calendar"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-09-13T00:00:00",
+      "title": "Caine\u2019s bday",
+      "meta": "23h 59m",
+      "tag": "personal",
+      "calendar": "Home"
+    },
+    {
+      "time": "00:00",
+      "_date": "2026-09-18T00:00:00",
       "title": "Yogi Riri",
       "meta": "71h 59m",
       "tag": "personal",
